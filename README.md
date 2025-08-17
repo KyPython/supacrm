@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### 💻 SupaCRM: An Enterprise-Grade SaaS CRM
 
-## Getting Started
+**SupaCRM** is a production-ready, secure, multi-role SaaS Customer Relationship Management (CRM) application built with React (Next.js) and Supabase. This project serves as a comprehensive demonstration of full-stack expertise, showcasing advanced authentication flows, fine-grained access control with Row-Level Security (RLS), and a modular, scalable architecture ready for real-world use.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### **🚀 Key Features & Enterprise Capabilities**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This application was designed to solve complex business requirements, demonstrating a professional approach to software development.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Multi-role access:** Implements a robust permission system with `super_admin`, `admin`, `agent`, and `user` roles.
+- **Supabase Auth:** Utilizes industry-standard authentication via OAuth and Magic Link.
+- **Row-Level Security (RLS):** Enforces fine-grained access policies directly at the database level, ensuring data is only visible to authorized users.
+- **Full CRUD Functionality:** Manages core CRM data including Companies, Contacts, Deals, Tasks, and Files.
+- **Secure File Storage:** Integrates with Supabase Storage for secure file uploads and downloads, with access restricted by RLS policies.
+- **Protected Routes:** Ensures a secure user experience with role-based navigation and UI components.
+- **Cross-platform Compatibility:** Addresses and resolves a known cross-platform authentication bug, showcasing advanced problem-solving skills.
+- **Modular Architecture:** Features a clean, reusable codebase with custom hooks, components, and context for long-term maintainability.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+### **🧱 Architecture & Core Technologies**
 
-To learn more about Next.js, take a look at the following resources:
+This project is structured as a monorepo to manage both the frontend and backend components seamlessly. The architecture highlights an understanding of building a cohesive, full-stack application.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Layer              | Technology                            | Rationale                                                                                                                             |
+| :----------------- | :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------ |
+| **Frontend**       | React (Next.js)                       | A leading framework for building high-performance, server-side rendered UIs.                                                          |
+| **Backend**        | Supabase                              | A powerful Backend-as-a-Service (BaaS) providing a Postgres database, authentication, and file storage in a single, managed platform. |
+| **Authentication** | Supabase Auth                         | Provides secure, managed user authentication, reducing development overhead.                                                          |
+| **Security**       | Supabase RLS                          | Enforces granular data access policies, a best practice for data integrity.                                                           |
+| **Storage**        | Supabase Storage                      | A secure and scalable solution for file management.                                                                                   |
+| **Hosting**        | Render (Frontend), Supabase (Backend) | Demonstrates proficiency in deploying a modern web application and configuring its backend services.                                  |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+### **🛡️ Security & Data Integrity**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The security model is a core highlight of this project. Supabase's **Row-Level Security (RLS)** is leveraged to provide a secure and scalable foundation. Each user's data access is strictly limited based on their role and ID, making it a powerful demonstration of database-level access control.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+### **🛠️ Getting Started & Best Practices**
+
+This project is designed to be easily set up and understood by other developers, reflecting professional coding standards.
+
+1.  **Clone the repository:**
+
+    ```sh
+    git clone https://github.com/KyPython/supacrm.git
+    cd supacrm
+    ```
+
+2.  **Install dependencies:**
+
+    ```sh
+    npm install
+    # or
+    yarn install
+    ```
+
+3.  **Configure environment variables:**
+
+    - Copy `.env.example` to `.env.local` and fill in your Supabase project keys.
+
+4.  **Run the development server:**
+
+    ```sh
+    npm run dev
+    # or
+    yarn dev
+    ```
+
+5.  **Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.**
+
+---
+
+### **📚 Codebase & Documentation**
+
+- **Database Schema:** The complete database schema is documented in [`database/schema.sql`](https://www.google.com/search?q=database/schema.sql).
+- **Security Policies:** All RLS policies are clearly defined in [`src/lib/rls-policies.sql`](https://www.google.com/search?q=src/lib/rls-policies.sql), providing a transparent view of the security model.
+- **Modular Code:** The codebase is organized with reusable hooks (`useAuth.tsx`, `useCRUD.tsx`) and components, demonstrating a commitment to a clean and maintainable architecture.
+
+---
+
+### **🚢 Deployment**
+
+The frontend can be easily deployed to services like Render or Vercel, demonstrating an understanding of modern CI/CD pipelines. The backend is managed entirely within the Supabase platform, where the schema and security policies are configured.
+
+---
+
+### **📧 Contact**
+
+Questions or feedback? Please open an issue on the repository or reach out.
