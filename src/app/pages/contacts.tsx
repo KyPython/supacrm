@@ -24,13 +24,11 @@ export default function ContactsPage() {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  // Typed useForm: values and errors
   const form = useForm<{ name: string; email: string }, FormErrors>({
     name: "",
     email: "",
   });
 
-  // Fetch contacts on mount
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -38,8 +36,8 @@ export default function ContactsPage() {
   async function fetchContacts() {
     form.setLoading(true);
     const { data, error } = await supabase
-      .from<Contact, Contact>("contacts")
-      .select("*");
+      .from("contacts")
+      .select<Contact>("*"); // <Contact> here fixes TS error
     if (!error) setContacts(data || []);
     else form.setErrors({ fetch: error.message });
     form.setLoading(false);
@@ -48,7 +46,6 @@ export default function ContactsPage() {
   async function addContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // Validate form
     if (
       !form.validate({
         name: (v) => (!v ? "Name required" : ""),
@@ -59,10 +56,9 @@ export default function ContactsPage() {
       return;
 
     form.setLoading(true);
-    const { error } = await supabase.from("contacts").insert({
-      name: form.values.name,
-      email: form.values.email,
-    });
+    const { error } = await supabase
+      .from<Contact>("contacts")
+      .insert([{ name: form.values.name, email: form.values.email }]);
     if (!error) {
       form.setValues({ name: "", email: "" });
       form.setSuccess("Contact added!");
@@ -75,7 +71,10 @@ export default function ContactsPage() {
 
   async function deleteContact(id: number) {
     form.setLoading(true);
-    const { error } = await supabase.from("contacts").delete().eq("id", id);
+    const { error } = await supabase
+      .from<Contact>("contacts")
+      .delete()
+      .eq("id", id);
     if (!error) fetchContacts();
     else form.setErrors({ delete: error.message });
     form.setLoading(false);

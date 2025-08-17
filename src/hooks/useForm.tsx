@@ -3,10 +3,11 @@ import { useState } from "react";
 // Generic type-safe useForm
 export function useForm<
   TValues extends Record<string, any>,
-  TErrors extends Partial<
-    Record<keyof TValues, string> & Record<string, string>
-  >
+  TExtraErrors extends Record<string, string> = {}
 >(initialValues: TValues) {
+  // Merge form field keys + extra error keys
+  type TErrors = Partial<Record<keyof TValues, string> & TExtraErrors>;
+
   const [values, setValues] = useState<TValues>(initialValues);
   const [errors, setErrors] = useState<TErrors>({});
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export function useForm<
     values,
     setValues,
     errors,
-    setErrors,
+    setErrors: setErrors as React.Dispatch<React.SetStateAction<TErrors>>,
     loading,
     setLoading,
     success,
