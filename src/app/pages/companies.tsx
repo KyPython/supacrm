@@ -63,10 +63,26 @@ export default function CompaniesPage() {
       {/* Error and success banners */}
       <ErrorBanner
         error={
-          form.errors.fetch ||
-          form.errors.submit ||
-          form.errors.delete ||
-          form.errors.name
+          (form.errors &&
+          typeof form.errors === "object" &&
+          "fetch" in form.errors
+            ? (form.errors as any).fetch
+            : undefined) ||
+          (form.errors &&
+          typeof form.errors === "object" &&
+          "submit" in form.errors
+            ? (form.errors as any).submit
+            : undefined) ||
+          (form.errors &&
+          typeof form.errors === "object" &&
+          "delete" in form.errors
+            ? (form.errors as any).delete
+            : undefined) ||
+          (form.errors &&
+          typeof form.errors === "object" &&
+          "name" in form.errors
+            ? (form.errors as any).name
+            : undefined)
         }
       />
       <SuccessBanner message={form.success} />
