@@ -23,7 +23,7 @@ export default function ContactsPage() {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  // Typed useForm
+  // Typed useForm: values and errors
   const form = useForm<{ name: string; email: string }, FormErrors>({
     name: "",
     email: "",
@@ -58,9 +58,10 @@ export default function ContactsPage() {
       return;
 
     form.setLoading(true);
-    const { error } = await supabase
-      .from("contacts")
-      .insert({ name: form.values.name, email: form.values.email });
+    const { error } = await supabase.from("contacts").insert({
+      name: form.values.name,
+      email: form.values.email,
+    });
     if (!error) {
       form.setValues({ name: "", email: "" });
       form.setSuccess("Contact added!");

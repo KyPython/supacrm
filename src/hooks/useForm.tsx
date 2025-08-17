@@ -1,27 +1,33 @@
 import { useState } from "react";
 
-// Generic form hook
-export function useForm<TValues = {}, TErrors = {}>(initialValues: TValues) {
+// Generic type-safe useForm
+export function useForm<
+  TValues extends Record<string, any>,
+  TErrors extends Partial<
+    Record<keyof TValues, string> & Record<string, string>
+  >
+>(initialValues: TValues) {
   const [values, setValues] = useState<TValues>(initialValues);
-  const [errors, setErrors] = useState<TErrors>({} as TErrors);
+  const [errors, setErrors] = useState<TErrors>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
 
-  // Input change handler
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
-    setValues((v) => ({ ...v, [name]: value } as TValues));
-    setErrors((err) => ({ ...err, [name]: undefined } as TErrors));
+    if (!(name in values)) return; // Only update existing fields
+    setValues((v) => ({ ...v, [name]: value }));
+    setErrors((err) => ({ ...err, [name]: undefined }));
   }
 
-  // Validation
-  function validate(rules: {
-    [K in keyof TValues]?: (v: TValues[K]) => string;
-  }): boolean {
-    const newErrors: Partial<TErrors> = {};
+  type ValidationRules = {
+    [K in keyof TValues]?: (value: TValues[K]) => string;
+  };
+
+  function validate(rules: ValidationRules) {
+    const newErrors: Partial<Record<keyof TValues, string>> = {};
     for (const key in rules) {
       const error = rules[key as keyof TValues]?.(values[key as keyof TValues]);
-      if (error) newErrors[key as keyof TErrors] = error as any;
+      if (error) newErrors[key as keyof TValues] = error;
     }
     setErrors(newErrors as TErrors);
     return Object.keys(newErrors).length === 0;
@@ -41,7 +47,7 @@ export function useForm<TValues = {}, TErrors = {}>(initialValues: TValues) {
   };
 }
 
-// Error banner
+// Error and success banners
 export function ErrorBanner({ error }: { error?: string }) {
   if (!error) return null;
   return (
@@ -51,7 +57,6 @@ export function ErrorBanner({ error }: { error?: string }) {
   );
 }
 
-// Success banner
 export function SuccessBanner({ message }: { message?: string }) {
   if (!message) return null;
   return (
