@@ -17,6 +17,7 @@ interface FormErrors {
   fetch?: string;
   submit?: string;
   delete?: string;
+  [key: string]: string | undefined;
 }
 
 export default function ContactsPage() {
