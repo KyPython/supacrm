@@ -28,8 +28,8 @@ export default function ContactsPage() {
     // Validate form: name and email required, email format
     if (
       !form.validate({
-        name: (v) => (!v ? "Name required" : ""),
-        email: (v) =>
+        name: (v: string) => (!v ? "Name required" : ""),
+        email: (v: string) =>
           !v ? "Email required" : /.+@.+\..+/.test(v) ? "" : "Invalid email",
       })
     )
