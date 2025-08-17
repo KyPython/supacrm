@@ -15,7 +15,7 @@ interface FormErrors {
   fetch?: string;
   submit?: string;
   delete?: string;
-  [key: string]: string | undefined;
+  [key: string]: string; // <-- change here
 }
 
 export default function CompaniesPage() {
