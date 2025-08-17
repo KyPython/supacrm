@@ -23,7 +23,7 @@ export default function ContactsPage() {
     form.setLoading(false);
   }
 
-  async function addContact(e) {
+  async function addContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     // Validate form: name and email required, email format
     if (
