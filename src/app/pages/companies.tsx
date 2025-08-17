@@ -11,11 +11,7 @@ interface Company {
 
 // Form error type
 interface FormErrors {
-  name?: string;
-  fetch?: string;
-  submit?: string;
-  delete?: string;
-  [key: string]: string; // <-- change here
+  [key: string]: string;
 }
 
 export default function CompaniesPage() {
