@@ -3,39 +3,52 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
+// Company type
+interface Company {
+  id: number;
+  name: string;
+}
+
+// Form error type
+interface FormErrors {
+  name?: string;
+  fetch?: string;
+  submit?: string;
+  delete?: string;
+  [key: string]: string | undefined;
+}
+
 export default function CompaniesPage() {
-  // Auth context for current user
   const { user } = useAuth();
-  // State for companies list
-  const [companies, setCompanies] = useState<any[]>([]);
-  // useForm hook for form state, validation, and error handling
-  const form = useForm({ name: "" });
+  const [companies, setCompanies] = useState<Company[]>([]);
+
+  // Use form hook with extra errors
+  const form = useForm<{ name: string }, FormErrors>({ name: "" });
 
   useEffect(() => {
-    fetchCompanies(); // Initial fetch
+    fetchCompanies();
   }, []);
 
   async function fetchCompanies() {
     form.setLoading(true);
-    const { data, error } = await supabase.from("companies").select("*");
+    const { data, error } = await supabase
+      .from<Company>("companies")
+      .select("*");
     if (!error) setCompanies(data || []);
-    else form.setErrors({ name: error.message });
+    else form.setErrors({ fetch: error.message });
     form.setLoading(false);
   }
 
   async function addCompany(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Validate form: name required
-    if (
-      !form.validate({
-        name: (v: string) => (!v ? "Company name required" : ""),
-      })
-    )
+
+    if (!form.validate({ name: (v) => (!v ? "Company name required" : "") }))
       return;
+
     form.setLoading(true);
     const { error } = await supabase
-      .from("companies")
-      .insert({ name: form.values.name });
+      .from<Company>("companies")
+      .insert([{ name: form.values.name }]);
     if (!error) {
       form.setValues({ name: "" });
       form.setSuccess("Company added!");
@@ -48,45 +61,29 @@ export default function CompaniesPage() {
 
   async function deleteCompany(id: number) {
     form.setLoading(true);
-    const { error } = await supabase.from("companies").delete().eq("id", id);
-    if (!error) {
-      fetchCompanies();
-    } else {
-      form.setErrors({ delete: error.message });
-    }
+    const { error } = await supabase
+      .from<Company>("companies")
+      .delete()
+      .eq("id", id);
+    if (!error) fetchCompanies();
+    else form.setErrors({ delete: error.message });
     form.setLoading(false);
   }
 
   return (
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Companies</h1>
-      {/* Error and success banners */}
+
       <ErrorBanner
         error={
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "fetch" in form.errors
-            ? (form.errors as any).fetch
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "submit" in form.errors
-            ? (form.errors as any).submit
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "delete" in form.errors
-            ? (form.errors as any).delete
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "name" in form.errors
-            ? (form.errors as any).name
-            : undefined)
+          form.errors.name ||
+          form.errors.fetch ||
+          form.errors.submit ||
+          form.errors.delete
         }
       />
       <SuccessBanner message={form.success} />
-      {/* Add company form */}
+
       <form onSubmit={addCompany} className="mb-6 flex gap-2 items-center">
         <input
           name="name"
@@ -94,15 +91,7 @@ export default function CompaniesPage() {
           onChange={form.handleChange}
           placeholder="New company name"
           className={`border px-3 py-2 rounded w-full ${
-            (
-              form.errors &&
-              typeof form.errors === "object" &&
-              "name" in form.errors
-                ? (form.errors as any).name
-                : undefined
-            )
-              ? "border-red-400"
-              : ""
+            form.errors.name ? "border-red-400" : ""
           }`}
         />
         <button
@@ -113,8 +102,9 @@ export default function CompaniesPage() {
           Add
         </button>
       </form>
-      {/* Companies list */}
+
       {form.loading && <p>Loading...</p>}
+
       <ul className="divide-y">
         {companies.map((c) => (
           <li key={c.id} className="flex justify-between items-center py-3">
