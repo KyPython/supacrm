@@ -46,7 +46,7 @@ export default function CompaniesPage() {
     form.setLoading(false);
   }
 
-  async function deleteCompany(id) {
+  async function deleteCompany(id: number) {
     form.setLoading(true);
     const { error } = await supabase.from("companies").delete().eq("id", id);
     if (!error) {
