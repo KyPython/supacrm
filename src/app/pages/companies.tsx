@@ -26,7 +26,11 @@ export default function CompaniesPage() {
   async function addCompany(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     // Validate form: name required
-    if (!form.validate({ name: (v) => (!v ? "Company name required" : "") }))
+    if (
+      !form.validate({
+        name: (v: string) => (!v ? "Company name required" : ""),
+      })
+    )
       return;
     form.setLoading(true);
     const { error } = await supabase
