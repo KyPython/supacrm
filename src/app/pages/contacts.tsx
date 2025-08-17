@@ -3,14 +3,14 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
-// Define the shape of a contact
+// Contact type
 interface Contact {
   id: number;
   name: string;
   email: string;
 }
 
-// Define the shape of form errors
+// Form error type
 interface FormErrors {
   name?: string;
   email?: string;
@@ -23,12 +23,13 @@ export default function ContactsPage() {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  // useForm with typed errors and values
+  // Typed useForm
   const form = useForm<{ name: string; email: string }, FormErrors>({
     name: "",
     email: "",
   });
 
+  // Fetch contacts on mount
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -45,10 +46,12 @@ export default function ContactsPage() {
 
   async function addContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    // Validate form
     if (
       !form.validate({
-        name: (v: string) => (!v ? "Name required" : ""),
-        email: (v: string) =>
+        name: (v) => (!v ? "Name required" : ""),
+        email: (v) =>
           !v ? "Email required" : /.+@.+\..+/.test(v) ? "" : "Invalid email",
       })
     )
