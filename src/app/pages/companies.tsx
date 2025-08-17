@@ -27,9 +27,7 @@ export default function CompaniesPage() {
 
   async function fetchCompanies() {
     form.setLoading(true);
-    const { data, error } = await supabase
-      .from<Company>("companies")
-      .select("*");
+    const { data, error } = await supabase.from("companies").select("*");
     if (!error) setCompanies(data || []);
     else form.setErrors({ fetch: error.message });
     form.setLoading(false);
