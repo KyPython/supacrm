@@ -3,21 +3,41 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
+// Define the shape of a contact
+interface Contact {
+  id: number;
+  name: string;
+  email: string;
+}
+
+// Define the shape of form errors
+interface FormErrors {
+  name?: string;
+  email?: string;
+  fetch?: string;
+  submit?: string;
+  delete?: string;
+}
+
 export default function ContactsPage() {
-  // Auth context for current user
   const { user } = useAuth();
-  // State for contacts list
-  const [contacts, setContacts] = useState<any[]>([]);
-  // useForm hook for form state, validation, and error handling
-  const form = useForm({ name: "", email: "" });
+  const [contacts, setContacts] = useState<Contact[]>([]);
+
+  // useForm with typed errors and values
+  const form = useForm<{ name: string; email: string }, FormErrors>({
+    name: "",
+    email: "",
+  });
 
   useEffect(() => {
-    fetchContacts(); // Initial fetch
+    fetchContacts();
   }, []);
 
   async function fetchContacts() {
     form.setLoading(true);
-    const { data, error } = await supabase.from("contacts").select("*");
+    const { data, error } = await supabase
+      .from<Contact>("contacts")
+      .select("*");
     if (!error) setContacts(data || []);
     else form.setErrors({ fetch: error.message });
     form.setLoading(false);
@@ -25,7 +45,6 @@ export default function ContactsPage() {
 
   async function addContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Validate form: name and email required, email format
     if (
       !form.validate({
         name: (v: string) => (!v ? "Name required" : ""),
@@ -34,6 +53,7 @@ export default function ContactsPage() {
       })
     )
       return;
+
     form.setLoading(true);
     const { error } = await supabase
       .from("contacts")
@@ -51,49 +71,26 @@ export default function ContactsPage() {
   async function deleteContact(id: number) {
     form.setLoading(true);
     const { error } = await supabase.from("contacts").delete().eq("id", id);
-    if (!error) {
-      fetchContacts();
-    } else {
-      form.setErrors({ delete: error.message });
-    }
+    if (!error) fetchContacts();
+    else form.setErrors({ delete: error.message });
     form.setLoading(false);
   }
 
   return (
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Contacts</h1>
-      {/* Error and success banners */}
+
       <ErrorBanner
         error={
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "fetch" in form.errors
-            ? (form.errors as any).fetch
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "submit" in form.errors
-            ? (form.errors as any).submit
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "delete" in form.errors
-            ? (form.errors as any).delete
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "name" in form.errors
-            ? (form.errors as any).name
-            : undefined) ||
-          (form.errors &&
-          typeof form.errors === "object" &&
-          "email" in form.errors
-            ? (form.errors as any).email
-            : undefined)
+          form.errors.name ||
+          form.errors.email ||
+          form.errors.fetch ||
+          form.errors.submit ||
+          form.errors.delete
         }
       />
       <SuccessBanner message={form.success} />
-      {/* Add contact form */}
+
       <form onSubmit={addContact} className="mb-6 flex gap-2 items-center">
         <input
           name="name"
@@ -101,15 +98,7 @@ export default function ContactsPage() {
           onChange={form.handleChange}
           placeholder="Name"
           className={`border px-3 py-2 rounded w-1/2 ${
-            (
-              form.errors &&
-              typeof form.errors === "object" &&
-              "name" in form.errors
-                ? (form.errors as any).name
-                : undefined
-            )
-              ? "border-red-400"
-              : ""
+            form.errors.name ? "border-red-400" : ""
           }`}
         />
         <input
@@ -129,8 +118,9 @@ export default function ContactsPage() {
           Add
         </button>
       </form>
-      {/* Contacts list */}
+
       {form.loading && <p>Loading...</p>}
+
       <ul className="divide-y">
         {contacts.map((c) => (
           <li key={c.id} className="flex justify-between items-center py-3">
