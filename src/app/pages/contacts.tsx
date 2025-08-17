@@ -7,7 +7,7 @@ export default function ContactsPage() {
   // Auth context for current user
   const { user } = useAuth();
   // State for contacts list
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState<any[]>([]);
   // useForm hook for form state, validation, and error handling
   const form = useForm({ name: "", email: "" });
 
