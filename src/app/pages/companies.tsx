@@ -19,7 +19,7 @@ export default function CompaniesPage() {
     form.setLoading(true);
     const { data, error } = await supabase.from("companies").select("*");
     if (!error) setCompanies(data || []);
-    else form.setErrors({ fetch: error.message });
+    else form.setErrors({ name: error.message });
     form.setLoading(false);
   }
 
