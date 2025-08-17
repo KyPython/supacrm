@@ -48,7 +48,7 @@ export default function ContactsPage() {
     form.setLoading(false);
   }
 
-  async function deleteContact(id) {
+  async function deleteContact(id: number) {
     form.setLoading(true);
     const { error } = await supabase.from("contacts").delete().eq("id", id);
     if (!error) {
