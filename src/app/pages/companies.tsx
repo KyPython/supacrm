@@ -9,13 +9,7 @@ export default function CompaniesPage() {
   // State for companies list
   const [companies, setCompanies] = useState<any[]>([]);
   // useForm hook for form state, validation, and error handling
-  type FormErrors = {
-    fetch?: string;
-    submit?: string;
-    delete?: string;
-    name?: string;
-  };
-  const form = useForm<{ name: string }, FormErrors>({ name: "" });
+  const form = useForm({ name: "" });
 
   useEffect(() => {
     fetchCompanies(); // Initial fetch
