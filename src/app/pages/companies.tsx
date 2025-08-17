@@ -7,7 +7,7 @@ export default function CompaniesPage() {
   // Auth context for current user
   const { user } = useAuth();
   // State for companies list
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   // useForm hook for form state, validation, and error handling
   const form = useForm({ name: "" });
 
