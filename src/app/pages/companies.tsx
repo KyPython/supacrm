@@ -23,7 +23,7 @@ export default function CompaniesPage() {
     form.setLoading(false);
   }
 
-  async function addCompany(e) {
+  async function addCompany(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     // Validate form: name required
     if (!form.validate({ name: (v) => (!v ? "Company name required" : "") }))
