@@ -38,7 +38,7 @@ export default function ContactsPage() {
   async function fetchContacts() {
     form.setLoading(true);
     const { data, error } = await supabase
-      .from<Contact>("contacts")
+      .from<Contact, Contact>("contacts")
       .select("*");
     if (!error) setContacts(data || []);
     else form.setErrors({ fetch: error.message });
