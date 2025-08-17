@@ -40,39 +40,6 @@ The security model is a core highlight of this project. Supabase's **Row-Level S
 
 ---
 
-### **🛠️ Getting Started & Best Practices**
-
-This project is designed to be easily set up and understood by other developers, reflecting professional coding standards.
-
-1.  **Clone the repository:**
-
-    ```sh
-    git clone https://github.com/KyPython/supacrm.git
-    cd supacrm
-    ```
-
-2.  **Install dependencies:**
-
-    ```sh
-    npm install
-    # or
-    yarn install
-    ```
-
-3.  **Configure environment variables:**
-
-    - Copy `.env.example` to `.env.local` and fill in your Supabase project keys.
-
-4.  **Run the development server:**
-
-    ```sh
-    npm run dev
-    # or
-    yarn dev
-    ```
-
-5.  **Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.**
-
 ---
 
 ### **📚 Codebase & Documentation**
@@ -80,12 +47,6 @@ This project is designed to be easily set up and understood by other developers,
 - **Database Schema:** The complete database schema is documented in [`database/schema.sql`](https://www.google.com/search?q=database/schema.sql).
 - **Security Policies:** All RLS policies are clearly defined in [`src/lib/rls-policies.sql`](https://www.google.com/search?q=src/lib/rls-policies.sql), providing a transparent view of the security model.
 - **Modular Code:** The codebase is organized with reusable hooks (`useAuth.tsx`, `useCRUD.tsx`) and components, demonstrating a commitment to a clean and maintainable architecture.
-
----
-
-### **🚢 Deployment**
-
-The frontend can be easily deployed to services like Render or Vercel, demonstrating an understanding of modern CI/CD pipelines. The backend is managed entirely within the Supabase platform, where the schema and security policies are configured.
 
 ---
 
