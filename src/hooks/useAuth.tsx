@@ -1,4 +1,5 @@
 // src/hooks/useAuth.ts (enhanced version)
+"use client";
 import { useEffect, useState, createContext, useContext } from "react";
 import { supabase } from "@/lib/supabase";
 import { UserRole, hasPermission, canAccessRoute } from "@/lib/roles";
