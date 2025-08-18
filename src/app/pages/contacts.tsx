@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
@@ -10,24 +12,16 @@ interface Contact {
   email: string;
 }
 
-// Form error type
-interface FormErrors {
-  name?: string;
-  email?: string;
-  fetch?: string;
-  submit?: string;
-  delete?: string;
-  [key: string]: string | undefined;
-}
-
 export default function ContactsPage() {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  const form = useForm<{ name: string; email: string }, FormErrors>({
-    name: "",
-    email: "",
-  });
+  const form = useForm<{ name: string; email: string }, Record<string, string>>(
+    {
+      name: "",
+      email: "",
+    }
+  );
 
   useEffect(() => {
     fetchContacts();
@@ -35,9 +29,7 @@ export default function ContactsPage() {
 
   async function fetchContacts() {
     form.setLoading(true);
-    const { data, error } = await supabase
-      .from("contacts")
-      .select<Contact>("*"); // <Contact> here fixes TS error
+    const { data, error } = await supabase.from("contacts").select("*");
     if (!error) setContacts(data || []);
     else form.setErrors({ fetch: error.message });
     form.setLoading(false);
@@ -49,15 +41,14 @@ export default function ContactsPage() {
     if (
       !form.validate({
         name: (v) => (!v ? "Name required" : ""),
-        email: (v) =>
-          !v ? "Email required" : /.+@.+\..+/.test(v) ? "" : "Invalid email",
+        email: (v) => (!v ? "Email required" : ""),
       })
     )
       return;
 
     form.setLoading(true);
     const { error } = await supabase
-      .from<Contact>("contacts")
+      .from("contacts")
       .insert([{ name: form.values.name, email: form.values.email }]);
     if (!error) {
       form.setValues({ name: "", email: "" });
@@ -71,10 +62,7 @@ export default function ContactsPage() {
 
   async function deleteContact(id: number) {
     form.setLoading(true);
-    const { error } = await supabase
-      .from<Contact>("contacts")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("contacts").delete().eq("id", id);
     if (!error) fetchContacts();
     else form.setErrors({ delete: error.message });
     form.setLoading(false);
@@ -101,7 +89,7 @@ export default function ContactsPage() {
           value={form.values.name}
           onChange={form.handleChange}
           placeholder="Name"
-          className={`border px-3 py-2 rounded w-1/2 ${
+          className={`border px-3 py-2 rounded w-full ${
             form.errors.name ? "border-red-400" : ""
           }`}
         />
@@ -110,7 +98,7 @@ export default function ContactsPage() {
           value={form.values.email}
           onChange={form.handleChange}
           placeholder="Email"
-          className={`border px-3 py-2 rounded w-1/2 ${
+          className={`border px-3 py-2 rounded w-full ${
             form.errors.email ? "border-red-400" : ""
           }`}
         />

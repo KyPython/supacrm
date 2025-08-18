@@ -1,8 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import "./globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/hooks/useAuth";
-import AppRouter from "./router";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +13,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "SupaCRM - Secure Multi-Role SaaS",
-  description: "A secure CRM built with Next.js, Supabase, and RLS",
-};
+import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/context/AuthContext.js";
+import AppRouter from "./router";
 
 export default function RootLayout({
   children,
@@ -30,7 +28,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <AppRouter />
           <main>{children}</main>
         </AuthProvider>
       </body>

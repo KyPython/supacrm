@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
@@ -9,20 +11,11 @@ interface Company {
   name: string;
 }
 
-// Form error type
-interface FormErrors {
-  name?: string;
-  fetch?: string;
-  submit?: string;
-  delete?: string;
-  [key: string]: string | undefined;
-}
-
 export default function CompaniesPage() {
   const { user } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
 
-  const form = useForm<{ name: string }, FormErrors>({ name: "" });
+  const form = useForm<{ name: string }, Record<string, string>>({ name: "" });
 
   useEffect(() => {
     fetchCompanies();
@@ -30,9 +23,7 @@ export default function CompaniesPage() {
 
   async function fetchCompanies() {
     form.setLoading(true);
-    const { data, error } = await supabase
-      .from<Company, Company>("companies") // <-- Two type arguments
-      .select("*");
+    const { data, error } = await supabase.from("companies").select("*");
     if (!error) setCompanies(data || []);
     else form.setErrors({ fetch: error.message });
     form.setLoading(false);
@@ -46,7 +37,7 @@ export default function CompaniesPage() {
 
     form.setLoading(true);
     const { error } = await supabase
-      .from<Company, Company>("companies") // <-- Two type arguments
+      .from("companies")
       .insert([{ name: form.values.name }]);
     if (!error) {
       form.setValues({ name: "" });
@@ -60,10 +51,7 @@ export default function CompaniesPage() {
 
   async function deleteCompany(id: number) {
     form.setLoading(true);
-    const { error } = await supabase
-      .from<Company, Company>("companies") // <-- Two type arguments
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("companies").delete().eq("id", id);
     if (!error) fetchCompanies();
     else form.setErrors({ delete: error.message });
     form.setLoading(false);

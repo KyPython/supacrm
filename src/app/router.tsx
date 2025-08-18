@@ -14,7 +14,7 @@ const getNavItems = (role?: string) => {
   ];
 
   // Items for specific roles
-  const roleItems = {
+  const roleItems: Record<string, { name: string; href: string }[]> = {
     super_admin: [
       ...baseItems,
       { name: "Users", href: "/users" },
@@ -37,7 +37,7 @@ const getNavItems = (role?: string) => {
 // Main application router component
 export default function AppRouter() {
   const pathname = usePathname();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout } = useAuth() as any;
 
   // If we're on the home page or auth pages, don't show this navigation
   if (pathname === "/" || pathname?.startsWith("/auth")) {
@@ -94,7 +94,7 @@ export default function AppRouter() {
                 <div className="flex items-center">
                   <div className="mr-3">
                     <p className="text-sm font-medium text-gray-700">
-                      {user.full_name || user.email}
+                      {user.full_name || user.name || user.email}
                     </p>
                     <p className="text-xs text-gray-500 capitalize">
                       {user.role || "User"}
@@ -136,7 +136,7 @@ export default function AppRouter() {
             <div className="flex items-center px-4">
               <div className="flex-grow">
                 <div className="text-base font-medium text-gray-800">
-                  {user.full_name || user.email}
+                  {user.full_name || user.name || user.email}
                 </div>
                 <div className="text-sm font-medium text-gray-500 capitalize">
                   {user.role || "User"}

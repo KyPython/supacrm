@@ -1,11 +1,12 @@
-// context/AuthContext.js
+"use client";
 import { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../lib/supabase';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  console.log("[AuthProvider] Rendering AuthProvider");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();

@@ -1,3 +1,6 @@
+"use client";
+import { useEffect, useState, createContext, useContext } from "react";
+import { supabase } from "@/lib/supabase";
 // src/hooks/useAuth.ts (enhanced version)
 "use client";
 import { useEffect, useState, createContext, useContext } from "react";
@@ -139,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+export { useAuth } from "@/context/AuthContext.js";
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

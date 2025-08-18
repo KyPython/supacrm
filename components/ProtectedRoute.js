@@ -1,6 +1,8 @@
+"use client";
+
+import { useAuth } from '@/context/AuthContext.js';
 // components/ProtectedRoute.js
 import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {

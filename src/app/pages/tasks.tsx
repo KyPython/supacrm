@@ -7,9 +7,12 @@ export default function TasksPage() {
   // Auth context for current user
   const { user } = useAuth();
   // State for tasks list
-  const [tasks, setTasks] = useState([]);
+  type Task = { id: string; title: string; [key: string]: any };
+  const [tasks, setTasks] = useState<Task[]>([]);
   // useForm hook for form state, validation, and error handling
-  const form = useForm({ title: "" });
+  const form = useForm<{ title: string }>({ title: "" });
+  // General error state for non-field errors
+  const [generalError, setGeneralError] = useState<string>("");
 
   useEffect(() => {
     fetchTasks(); // Initial fetch
@@ -17,14 +20,16 @@ export default function TasksPage() {
 
   async function fetchTasks() {
     form.setLoading(true);
+    setGeneralError("");
     const { data, error } = await supabase.from("tasks").select("*");
     if (!error) setTasks(data || []);
-    else form.setErrors({ fetch: error.message });
+    else setGeneralError(error.message);
     form.setLoading(false);
   }
 
-  async function addTask(e) {
+  async function addTask(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setGeneralError("");
     // Validate form: title required
     if (!form.validate({ title: (v) => (!v ? "Task title required" : "") }))
       return;
@@ -37,18 +42,19 @@ export default function TasksPage() {
       form.setSuccess("Task added!");
       fetchTasks();
     } else {
-      form.setErrors({ submit: error.message });
+      setGeneralError(error.message);
     }
     form.setLoading(false);
   }
 
-  async function deleteTask(id) {
+  async function deleteTask(id: string) {
     form.setLoading(true);
+    setGeneralError("");
     const { error } = await supabase.from("tasks").delete().eq("id", id);
     if (!error) {
       fetchTasks();
     } else {
-      form.setErrors({ delete: error.message });
+      setGeneralError(error.message);
     }
     form.setLoading(false);
   }
@@ -57,14 +63,7 @@ export default function TasksPage() {
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Tasks</h1>
       {/* Error and success banners */}
-      <ErrorBanner
-        error={
-          form.errors.fetch ||
-          form.errors.submit ||
-          form.errors.delete ||
-          form.errors.title
-        }
-      />
+      <ErrorBanner error={generalError || form.errors.title} />
       <SuccessBanner message={form.success} />
       {/* Add task form */}
       <form onSubmit={addTask} className="mb-6 flex gap-2 items-center">

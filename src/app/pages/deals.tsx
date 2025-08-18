@@ -3,29 +3,38 @@ import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
+// Deal type
+interface Deal {
+  id: number;
+  title: string;
+  amount: number;
+}
+
 export default function DealsPage() {
-  // Auth context for current user
   const { user } = useAuth();
-  // State for deals list
-  const [deals, setDeals] = useState([]);
-  // useForm hook for form state, validation, and error handling
-  const form = useForm({ title: "", amount: "" });
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [generalError, setGeneralError] = useState<string>("");
+  const form = useForm<{ title: string; amount: string }>({
+    title: "",
+    amount: "",
+  });
 
   useEffect(() => {
-    fetchDeals(); // Initial fetch
+    fetchDeals();
   }, []);
 
   async function fetchDeals() {
     form.setLoading(true);
+    setGeneralError("");
     const { data, error } = await supabase.from("deals").select("*");
-    if (!error) setDeals(data || []);
-    else form.setErrors({ fetch: error.message });
+    if (!error) setDeals((data as Deal[]) || []);
+    else setGeneralError(error.message);
     form.setLoading(false);
   }
 
-  async function addDeal(e) {
+  async function addDeal(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Validate form: title required, amount required and positive
+    setGeneralError("");
     if (
       !form.validate({
         title: (v) => (!v ? "Title required" : ""),
@@ -38,54 +47,47 @@ export default function DealsPage() {
       })
     )
       return;
+
     form.setLoading(true);
-    const { error } = await supabase.from("deals").insert({
-      title: form.values.title,
-      amount: parseFloat(form.values.amount),
-    });
+    const { error } = await supabase.from("deals").insert([
+      {
+        title: form.values.title,
+        amount: Number(form.values.amount),
+      },
+    ]);
     if (!error) {
       form.setValues({ title: "", amount: "" });
       form.setSuccess("Deal added!");
       fetchDeals();
     } else {
-      form.setErrors({ submit: error.message });
+      setGeneralError(error.message);
     }
     form.setLoading(false);
   }
 
-  async function deleteDeal(id) {
+  async function deleteDeal(id: number) {
     form.setLoading(true);
+    setGeneralError("");
     const { error } = await supabase.from("deals").delete().eq("id", id);
-    if (!error) {
-      fetchDeals();
-    } else {
-      form.setErrors({ delete: error.message });
-    }
+    if (!error) fetchDeals();
+    else setGeneralError(error.message);
     form.setLoading(false);
   }
 
   return (
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Deals</h1>
-      {/* Error and success banners */}
       <ErrorBanner
-        error={
-          form.errors.fetch ||
-          form.errors.submit ||
-          form.errors.delete ||
-          form.errors.title ||
-          form.errors.amount
-        }
+        error={form.errors.title || form.errors.amount || generalError}
       />
       <SuccessBanner message={form.success} />
-      {/* Add deal form */}
       <form onSubmit={addDeal} className="mb-6 flex gap-2 items-center">
         <input
           name="title"
           value={form.values.title}
           onChange={form.handleChange}
-          placeholder="Deal title"
-          className={`border px-3 py-2 rounded w-1/2 ${
+          placeholder="Title"
+          className={`border px-3 py-2 rounded w-full ${
             form.errors.title ? "border-red-400" : ""
           }`}
         />
@@ -94,8 +96,7 @@ export default function DealsPage() {
           value={form.values.amount}
           onChange={form.handleChange}
           placeholder="Amount"
-          type="number"
-          className={`border px-3 py-2 rounded w-1/2 ${
+          className={`border px-3 py-2 rounded w-full ${
             form.errors.amount ? "border-red-400" : ""
           }`}
         />
@@ -107,13 +108,12 @@ export default function DealsPage() {
           Add
         </button>
       </form>
-      {/* Deals list */}
       {form.loading && <p>Loading...</p>}
       <ul className="divide-y">
         {deals.map((d) => (
           <li key={d.id} className="flex justify-between items-center py-3">
             <span className="font-medium">
-              {d.title} <span className="text-gray-500">(${d.amount})</span>
+              {d.title} (${d.amount})
             </span>
             <button
               onClick={() => deleteDeal(d.id)}

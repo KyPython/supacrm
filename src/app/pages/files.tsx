@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { FileObject } from "@supabase/storage-js";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
@@ -7,15 +8,28 @@ export default function FileUploadPage() {
   // Auth context for current user
   const { user } = useAuth();
   // State for files list
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState<FileObject[]>([]);
   // useForm for file upload state, validation, and error handling
-  const form = useForm({ file: null });
+  const form = useForm<{ file: File | null }>({ file: null });
+  // General error state for non-field errors
+  const [generalError, setGeneralError] = useState<string>("");
 
-  async function handleUpload(e) {
+  async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setGeneralError("");
     // Validate file presence
     if (!form.validate({ file: (f) => (!f ? "File required" : "") })) return;
     form.setLoading(true);
+    if (!user) {
+      setGeneralError("User not authenticated.");
+      form.setLoading(false);
+      return;
+    }
+    if (!form.values.file) {
+      setGeneralError("No file selected.");
+      form.setLoading(false);
+      return;
+    }
     const filePath = `${user.id}/${form.values.file.name}`;
     const { error } = await supabase.storage
       .from("files")
@@ -25,24 +39,34 @@ export default function FileUploadPage() {
       form.setValues({ file: null });
       form.setSuccess("File uploaded!");
     } else {
-      form.setErrors({ submit: error.message });
+      setGeneralError(error.message);
     }
     form.setLoading(false);
   }
 
   async function fetchFiles() {
+    setGeneralError("");
+    if (!user) {
+      setGeneralError("User not authenticated.");
+      return;
+    }
     const { data, error } = await supabase.storage
       .from("files")
       .list(user.id + "/");
     if (!error) setFiles(data || []);
-    else form.setErrors({ fetch: error.message });
+    else setGeneralError(error.message);
   }
 
-  function handleFileChange(e) {
-    form.setValues({ file: e.target.files[0] });
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    form.setValues({ file: e.target.files ? e.target.files[0] : null });
   }
 
-  async function handleDownload(fileName) {
+  async function handleDownload(fileName: string) {
+    setGeneralError("");
+    if (!user) {
+      setGeneralError("User not authenticated.");
+      return;
+    }
     const { data, error } = await supabase.storage
       .from("files")
       .download(`${user.id}/${fileName}`);
@@ -55,7 +79,7 @@ export default function FileUploadPage() {
       window.URL.revokeObjectURL(url);
       form.setSuccess("Download started");
     } else {
-      form.setErrors({ download: error?.message || "Download failed" });
+      setGeneralError(error?.message || "Download failed");
     }
   }
 
@@ -63,14 +87,7 @@ export default function FileUploadPage() {
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">File Upload</h1>
       {/* Error and success banners */}
-      <ErrorBanner
-        error={
-          form.errors.fetch ||
-          form.errors.submit ||
-          form.errors.download ||
-          form.errors.file
-        }
-      />
+      <ErrorBanner error={generalError || form.errors.file} />
       <SuccessBanner message={form.success} />
       {/* File upload form */}
       <form onSubmit={handleUpload} className="mb-6 flex gap-2 items-center">

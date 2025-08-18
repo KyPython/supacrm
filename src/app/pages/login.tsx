@@ -1,43 +1,46 @@
-// pages/login.js
+import { useAuth } from "@/context/AuthContext.js";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string>("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const router = useRouter();
-  const { login, sendMagicLink } = useAuth();
+  const { login, sendMagicLink } = useAuth() as {
+    login: (email: string, password: string) => Promise<any>;
+    sendMagicLink: (email: string) => Promise<any>;
+  };
 
-  const handleEmailPasswordLogin = async (e) => {
+  const handleEmailPasswordLogin = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError("");
 
     try {
       await login(email, password);
       router.push("/dashboard");
     } catch (error) {
-      setError(error.message);
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMagicLinkLogin = async (e) => {
-    e.preventDefault();
+  const handleMagicLinkLogin = async () => {
     setLoading(true);
-    setError(null);
+    setError("");
 
     try {
       await sendMagicLink(email);
       setMagicLinkSent(true);
     } catch (error) {
-      setError(error.message);
+      setError(error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }
