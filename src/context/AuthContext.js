@@ -7,6 +7,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   console.log("[AuthProvider] Rendering AuthProvider");
+  console.log("[AuthProvider] children:", children);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -129,5 +130,7 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  console.log('[useAuth] value:', ctx);
+  return ctx;
 }

@@ -1,12 +1,11 @@
 "use client";
-export const dynamic = "force-dynamic";
+import { AuthProvider } from "@/context/AuthContext.js";
 import { useAuth } from "@/context/AuthContext.js";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
-export default function DashboardPage() {
-  const { user, logout } = useAuth() as any;
+function Dashboard() {
+  const { user, logout, loading } = useAuth() as any;
   const signOut = logout;
   const [stats, setStats] = useState({
     companies: 0,
@@ -39,7 +38,6 @@ export default function DashboardPage() {
     fetchStats();
   }, [user]);
 
-  // Only render dashboard if user is present
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -52,24 +50,6 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-100 flex">
       <nav className="w-64 bg-white shadow-lg h-screen p-6 flex flex-col gap-4">
         <h2 className="text-2xl font-bold mb-6">SupaCRM</h2>
-        <Link href="/dashboard" className="hover:text-blue-600">
-          Dashboard
-        </Link>
-        <Link href="/companies" className="hover:text-blue-600">
-          Companies
-        </Link>
-        <Link href="/contacts" className="hover:text-blue-600">
-          Contacts
-        </Link>
-        <Link href="/deals" className="hover:text-blue-600">
-          Deals
-        </Link>
-        <Link href="/tasks" className="hover:text-blue-600">
-          Tasks
-        </Link>
-        <Link href="/files" className="hover:text-blue-600">
-          Files
-        </Link>
         <button
           onClick={signOut}
           className="mt-auto bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
@@ -117,5 +97,13 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <AuthProvider>
+      <Dashboard />
+    </AuthProvider>
   );
 }

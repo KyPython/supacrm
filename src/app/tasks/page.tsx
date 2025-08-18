@@ -1,9 +1,10 @@
+"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../hooks/useAuth";
+import { AuthProvider, useAuth } from "../../context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
-export default function TasksPage() {
+function TasksPageContent() {
   // Auth context for current user
   const { user } = useAuth();
   // State for tasks list
@@ -101,5 +102,13 @@ export default function TasksPage() {
         ))}
       </ul>
     </div>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <AuthProvider>
+      <TasksPageContent />
+    </AuthProvider>
   );
 }

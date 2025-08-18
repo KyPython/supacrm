@@ -1,10 +1,11 @@
+"use client";
+import { AuthProvider } from "@/context/AuthContext.js";
 import { useAuth } from "@/context/AuthContext.js";
-// pages/signup.js
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function SignUp() {
+function SignUpContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -86,5 +87,13 @@ export default function SignUp() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignUp() {
+  return (
+    <AuthProvider>
+      <SignUpContent />
+    </AuthProvider>
   );
 }

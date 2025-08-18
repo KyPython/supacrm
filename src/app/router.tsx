@@ -37,6 +37,7 @@ const getNavItems = (role?: string) => {
 // Main application router component
 export default function AppRouter() {
   const pathname = usePathname();
+  console.log("[AppRouter] MOUNT");
   const { user, loading, logout } = useAuth() as any;
 
   // If we're on the home page or auth pages, don't show this navigation

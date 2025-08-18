@@ -1,16 +1,17 @@
+"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../hooks/useAuth";
+import { AuthProvider, useAuth } from "../../context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
-// Deal type
-interface Deal {
-  id: number;
-  title: string;
-  amount: number;
-}
+function DealsPageContent() {
+  // Deal type
+  interface Deal {
+    id: number;
+    title: string;
+    amount: number;
+  }
 
-export default function DealsPage() {
   const { user } = useAuth();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [generalError, setGeneralError] = useState<string>("");
@@ -126,5 +127,13 @@ export default function DealsPage() {
         ))}
       </ul>
     </div>
+  );
+}
+
+export default function DealsPage() {
+  return (
+    <AuthProvider>
+      <DealsPageContent />
+    </AuthProvider>
   );
 }
