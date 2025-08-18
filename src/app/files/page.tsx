@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import type { FileObject } from "@supabase/storage-js";
-import { AuthProvider } from "@/context/AuthContext.js";
 import { supabase } from "../../lib/supabase";
 import { useAuth, AuthProvider } from "@/context/AuthContext.js";
 // ...existing code...
