@@ -1,9 +1,9 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth, AuthProvider } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
-import { AuthProvider } from "@/context/AuthContext.js";
 
 interface Contact {
   id: number;

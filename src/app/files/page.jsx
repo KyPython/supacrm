@@ -6,17 +6,10 @@ import { supabase } from "../../lib/supabase";
 import { useAuth, AuthProvider } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
-// Supabase FileObject type
-type FileObject = {
-  name: string;
-};
-
 export default function FileUploadPage() {
-  // State for files list
-  const [files, setFiles] = useState<FileObject[]>([]);
   // Auth context for current user
   const { user } = useAuth();
-  async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
+  // State for files list
   const [files, setFiles] = useState([]);
   // useForm for file upload state, validation, and error handling
   const form = useForm<{ file: File | null }>({ file: null });
@@ -59,11 +52,11 @@ export default function FileUploadPage() {
       setGeneralError("User not authenticated.");
       return;
     }
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { data, error } = await supabase.storage
       .from("files")
       .list(user.id + "/");
     if (!error) setFiles(data || []);
-  async function handleDownload(fileName: string) {
+    else setGeneralError(error.message);
   }
 
   function handleFileChange(e) {

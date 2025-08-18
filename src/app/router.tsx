@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext.js";
 
 // Navigation items based on user role
 const getNavItems = (role?: string) => {
