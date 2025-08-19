@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 function SignUpContent() {
+  // Check Supabase config
+  const supabaseConfigMissing =
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,6 +38,13 @@ function SignUpContent() {
         <h2 className="text-center text-2xl font-bold mb-6">
           Create an account
         </h2>
+
+        {supabaseConfigMissing && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            Supabase API key or URL is missing. Please check your .env.local
+            file.
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -73,7 +84,7 @@ function SignUpContent() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || supabaseConfigMissing}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
           >
             {loading ? "Creating account..." : "Sign up"}

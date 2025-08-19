@@ -15,6 +15,10 @@ function LoginForm() {
     login: (email: string, password: string) => Promise<any>;
     sendMagicLink: (email: string) => Promise<any>;
   };
+  // Check Supabase config
+  const supabaseConfigMissing =
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const handleEmailPasswordLogin = async (
     e: React.FormEvent<HTMLFormElement>
@@ -69,6 +73,13 @@ function LoginForm() {
           Log in to SupaCRM
         </h2>
 
+        {supabaseConfigMissing && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            Supabase API key or URL is missing. Please check your .env.local
+            file.
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -106,7 +117,7 @@ function LoginForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || supabaseConfigMissing}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
           >
             {loading ? "Logging in..." : "Log in"}
@@ -119,7 +130,7 @@ function LoginForm() {
 
         <button
           onClick={handleMagicLinkLogin}
-          disabled={loading}
+          disabled={loading || supabaseConfigMissing}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded mb-4"
         >
           {loading ? "Sending..." : "Login with Magic Link"}
@@ -136,9 +147,5 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  return (
-    <AuthProvider>
-      <LoginForm />
-    </AuthProvider>
-  );
+  return <LoginForm />;
 }

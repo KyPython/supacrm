@@ -2,30 +2,29 @@
 export const dynamic = "force-dynamic";
 
 import { useState } from "react";
+import type { FileObject } from "@supabase/storage-js";
 import { supabase } from "../../lib/supabase";
-import { useAuth, AuthProvider } from "@/context/AuthContext.js";
+import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
-// Supabase FileObject type
-type FileObject = {
-  name: string;
-};
-
 export default function FileUploadPage() {
-  // State for files list
-  const [files, setFiles] = useState<FileObject[]>([]);
   // Auth context for current user
   const { user } = useAuth();
-  async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
-  const [files, setFiles] = useState([]);
+  // State for files list
+  const [files, setFiles] = useState<FileObject[]>([]);
   // useForm for file upload state, validation, and error handling
   const form = useForm<{ file: File | null }>({ file: null });
   // General error state for non-field errors
   const [generalError, setGeneralError] = useState<string>("");
 
-  async function handleUpload(e) {
+  async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setGeneralError("");
+    const input = e.currentTarget.elements.namedItem(
+      "file"
+    ) as HTMLInputElement;
+    const file = input?.files?.[0] || null;
+    form.setValues({ file });
     // Validate file presence
     if (!form.validate({ file: (f) => (!f ? "File required" : "") })) return;
     form.setLoading(true);
@@ -40,6 +39,7 @@ export default function FileUploadPage() {
       return;
     }
     const filePath = `${user.id}/${form.values.file.name}`;
+    if (!supabase) return;
     const { error } = await supabase.storage
       .from("files")
       .upload(filePath, form.values.file);
@@ -59,23 +59,25 @@ export default function FileUploadPage() {
       setGeneralError("User not authenticated.");
       return;
     }
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!supabase) return;
+    const { data, error } = await supabase.storage
       .from("files")
       .list(user.id + "/");
-    if (!error) setFiles(data || []);
-  async function handleDownload(fileName: string) {
+    if (!error) setFiles((data as FileObject[]) || []);
+    else setGeneralError(error.message);
   }
 
-  function handleFileChange(e) {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     form.setValues({ file: e.target.files ? e.target.files[0] : null });
   }
 
-  async function handleDownload(fileName) {
+  async function handleDownload(fileName: string) {
     setGeneralError("");
     if (!user) {
       setGeneralError("User not authenticated.");
       return;
     }
+    if (!supabase) return;
     const { data, error } = await supabase.storage
       .from("files")
       .download(`${user.id}/${fileName}`);
@@ -93,7 +95,6 @@ export default function FileUploadPage() {
   }
 
   return (
-    <AuthProvider>
       <div className="p-8 max-w-xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">File Upload</h1>
         {/* Error and success banners */}
@@ -127,10 +128,13 @@ export default function FileUploadPage() {
         {form.loading && <p>Loading...</p>}
         <ul className="divide-y">
           {files.map((f) => (
-            <li key={f.name} className="flex justify-between items-center py-3">
-              <span className="font-medium">{f.name}</span>
+            <li
+              key={(f as FileObject).name}
+              className="flex justify-between items-center py-3"
+            >
+              <span className="font-medium">{(f as FileObject).name}</span>
               <button
-                onClick={() => handleDownload(f.name)}
+                onClick={() => handleDownload((f as FileObject).name)}
                 className="text-blue-500 hover:underline"
                 disabled={form.loading}
               >
@@ -140,6 +144,5 @@ export default function FileUploadPage() {
           ))}
         </ul>
       </div>
-    </AuthProvider>
   );
 }

@@ -6,7 +6,8 @@ import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
 function TasksPageContent() {
   // Auth context for current user
-  const { user } = useAuth();
+  const auth = useAuth() ?? {};
+  const { user } = auth;
   // State for tasks list
   type Task = { id: string; title: string; [key: string]: any };
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -22,6 +23,7 @@ function TasksPageContent() {
   async function fetchTasks() {
     form.setLoading(true);
     setGeneralError("");
+    if (!supabase) return;
     const { data, error } = await supabase.from("tasks").select("*");
     if (!error) setTasks(data || []);
     else setGeneralError(error.message);
@@ -35,6 +37,7 @@ function TasksPageContent() {
     if (!form.validate({ title: (v) => (!v ? "Task title required" : "") }))
       return;
     form.setLoading(true);
+    if (!supabase) return;
     const { error } = await supabase
       .from("tasks")
       .insert({ title: form.values.title });
@@ -51,6 +54,7 @@ function TasksPageContent() {
   async function deleteTask(id: string) {
     form.setLoading(true);
     setGeneralError("");
+    if (!supabase) return;
     const { error } = await supabase.from("tasks").delete().eq("id", id);
     if (!error) {
       fetchTasks();

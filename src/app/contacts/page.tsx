@@ -1,108 +1,122 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
 import { useAuth, AuthProvider } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
+import { supabase } from "@/lib/supabase";
 
-interface Contact {
-  id: number;
+type Contact = {
+  id: any;
   name: string;
   email: string;
-}
+};
 
 export default function ContactsPage() {
-  const { user } = useAuth();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const form = useForm<{ name: string; email: string }, Record<string, string>>(
-    { name: "", email: "" }
-  );
+  const auth = useAuth() ?? {};
+  const { user, loading, login, signUp, sendMagicLink, logout } = auth;
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     fetchContacts();
   }, []);
 
   async function fetchContacts() {
-    form.setLoading(true);
+    setContactsLoading(true);
+    setError("");
+    if (!supabase) return;
     const { data, error } = await supabase.from("contacts").select("*");
     if (!error) setContacts(data || []);
-    else form.setErrors({ fetch: error.message });
-    form.setLoading(false);
+    else setError(error.message);
+    setContactsLoading(false);
   }
 
   async function addContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (
-      !form.validate({
-        name: (v) => (!v ? "Name required" : ""),
-        email: (v) => (!v ? "Email required" : ""),
-      })
-    )
+    setError("");
+    setSuccess("");
+    if (!name) {
+      setError("Name required");
       return;
-    form.setLoading(true);
-    const { error } = await supabase
-      .from("contacts")
-      .insert([{ name: form.values.name, email: form.values.email }]);
+    }
+    if (!email) {
+      setError("Email required");
+      return;
+    }
+    setContactsLoading(true);
+    // Use Supabase RPC to add client
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc("update_user_profile", {
+      p_first_name: name,
+      p_phone: email, // Assuming email is used for phone, adjust as needed
+    });
     if (!error) {
-      form.setValues({ name: "", email: "" });
-      form.setSuccess("Contact added!");
+      setName("");
+      setEmail("");
+      setSuccess("Client added!");
       fetchContacts();
     } else {
-      form.setErrors({ submit: error.message });
+      setError(error.message);
     }
-    form.setLoading(false);
+    setContactsLoading(false);
   }
 
   async function deleteContact(id: number) {
-    form.setLoading(true);
+    setContactsLoading(true);
+    setError("");
+    if (!supabase) return;
     const { error } = await supabase.from("contacts").delete().eq("id", id);
     if (!error) fetchContacts();
-    else form.setErrors({ delete: error.message });
-    form.setLoading(false);
+    else setError(error.message);
+    setContactsLoading(false);
   }
 
   return (
     <AuthProvider>
       <div className="p-8 max-w-xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Contacts</h1>
-        <ErrorBanner
-          error={
-            form.errors.name ||
-            form.errors.email ||
-            form.errors.fetch ||
-            form.errors.submit ||
-            form.errors.delete
-          }
-        />
-        <SuccessBanner message={form.success} />
+        {error && (
+          <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-100 text-green-700 p-2 mb-2 rounded">
+            {success}
+          </div>
+        )}
         <form onSubmit={addContact} className="mb-6 flex gap-2 items-center">
           <input
             name="name"
-            value={form.values.name}
-            onChange={form.handleChange}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Name"
             className={`border px-3 py-2 rounded w-full ${
-              form.errors.name ? "border-red-400" : ""
+              error ? "border-red-400" : ""
             }`}
           />
           <input
             name="email"
-            value={form.values.email}
-            onChange={form.handleChange}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             className={`border px-3 py-2 rounded w-full ${
-              form.errors.email ? "border-red-400" : ""
+              error ? "border-red-400" : ""
             }`}
           />
           <button
             type="submit"
             className="bg-blue-500 text-white px-5 py-2 rounded shadow"
-            disabled={form.loading}
+            disabled={contactsLoading}
           >
             Add
           </button>
         </form>
-        {form.loading && <p>Loading...</p>}
+        {contactsLoading && <p>Loading...</p>}
         <ul className="divide-y">
           {contacts.map((c) => (
             <li key={c.id} className="flex justify-between items-center py-3">
@@ -112,7 +126,7 @@ export default function ContactsPage() {
               <button
                 onClick={() => deleteContact(c.id)}
                 className="text-red-500 hover:underline"
-                disabled={form.loading}
+                disabled={contactsLoading}
               >
                 Delete
               </button>

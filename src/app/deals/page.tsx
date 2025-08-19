@@ -12,7 +12,8 @@ function DealsPageContent() {
     amount: number;
   }
 
-  const { user } = useAuth();
+  const auth = useAuth() ?? {};
+  const { user } = auth;
   const [deals, setDeals] = useState<Deal[]>([]);
   const [generalError, setGeneralError] = useState<string>("");
   const form = useForm<{ title: string; amount: string }>({
@@ -27,6 +28,7 @@ function DealsPageContent() {
   async function fetchDeals() {
     form.setLoading(true);
     setGeneralError("");
+    if (!supabase) return;
     const { data, error } = await supabase.from("deals").select("*");
     if (!error) setDeals((data as Deal[]) || []);
     else setGeneralError(error.message);
@@ -50,6 +52,7 @@ function DealsPageContent() {
       return;
 
     form.setLoading(true);
+    if (!supabase) return;
     const { error } = await supabase.from("deals").insert([
       {
         title: form.values.title,
@@ -69,6 +72,7 @@ function DealsPageContent() {
   async function deleteDeal(id: number) {
     form.setLoading(true);
     setGeneralError("");
+    if (!supabase) return;
     const { error } = await supabase.from("deals").delete().eq("id", id);
     if (!error) fetchDeals();
     else setGeneralError(error.message);

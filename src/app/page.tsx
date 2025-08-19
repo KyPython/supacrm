@@ -1,57 +1,91 @@
 "use client";
-import { AuthProvider } from "@/context/AuthContext.js";
 import { useAuth } from "@/context/AuthContext.js";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 function Dashboard() {
-  const { user, logout, loading } = useAuth() as any;
-  const signOut = logout;
+  const { user, logout, loading } = useAuth() ?? {};
   const [stats, setStats] = useState({
     companies: 0,
     contacts: 0,
     deals: 0,
     tasks: 0,
   });
-
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   useEffect(() => {
-    const fetchStats = async () => {
-      if (!user) return;
-      const [
-        { count: companies },
-        { count: contacts },
-        { count: deals },
-        { count: tasks },
-      ] = await Promise.all([
-        supabase.from("companies").select("id", { count: "exact", head: true }),
-        supabase.from("contacts").select("id", { count: "exact", head: true }),
-        supabase.from("deals").select("id", { count: "exact", head: true }),
-        supabase.from("tasks").select("id", { count: "exact", head: true }),
+    if (!user) return;
+    (async () => {
+      const [companies, contacts, deals, tasks] = await Promise.all([
+        supabase
+          ?.from("companies")
+          .select("id", { count: "exact", head: true }),
+        supabase?.from("contacts").select("id", { count: "exact", head: true }),
+        supabase?.from("deals").select("id", { count: "exact", head: true }),
+        supabase?.from("tasks").select("id", { count: "exact", head: true }),
       ]);
       setStats({
-        companies: companies ?? 0,
-        contacts: contacts ?? 0,
-        deals: deals ?? 0,
-        tasks: tasks ?? 0,
+        companies: companies?.count ?? 0,
+        contacts: contacts?.count ?? 0,
+        deals: deals?.count ?? 0,
+        tasks: tasks?.count ?? 0,
       });
-    };
-    fetchStats();
+    })();
   }, [user]);
 
-  if (!user) {
+  // Removed unused loadingTimeout
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => setLoadingTimeout(true), 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    console.log("[Page] Checking redirect conditions", { loading, user });
+    if (!loading && !user) {
+      console.log("[Page] Redirecting to /login");
+      window.location.replace("/login");
+    }
+  }, [loading, user]);
+
+  // Fallback to ensure redirect happens
+  if (typeof window !== "undefined" && !loading && !user) {
+    console.log("[Page] Immediate redirect to /login");
+    window.location.replace("/login");
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid mb-4"></div>
+          <span className="text-gray-500">Checking authentication...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md text-center">
+          <h2 className="text-2xl font-bold mb-4 text-red-600">
+            Not authenticated
+          </h2>
+          <p className="text-gray-700">Redirecting to login...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex min-h-screen">
       <nav className="w-64 bg-white shadow-lg h-screen p-6 flex flex-col gap-4">
         <h2 className="text-2xl font-bold mb-6">SupaCRM</h2>
         <button
-          onClick={signOut}
+          onClick={logout}
           className="mt-auto bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
         >
           Log out
@@ -101,9 +135,5 @@ function Dashboard() {
 }
 
 export default function Page() {
-  return (
-    <AuthProvider>
-      <Dashboard />
-    </AuthProvider>
-  );
+  return <Dashboard />;
 }

@@ -14,34 +14,30 @@ export default function CompaniesPage() {
   const form = useForm<{ name: string }, Record<string, string>>({ name: "" });
 
   useEffect(() => {
-    fetchCompanies();
+    (async () => {
+      form.setLoading(true);
+      if (!supabase) return;
+      const { data, error } = await supabase.from("companies").select("*");
+      if (!error) setCompanies(data || []);
+      else form.setErrors({ fetch: error?.message ?? "Unknown error" });
+      form.setLoading(false);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function fetchCompanies() {
-    form.setLoading(true);
-    const { data, error } = await supabase.from("companies").select("*");
-    if (!error) setCompanies(data || []);
-    else form.setErrors({ fetch: error?.message ?? "Unknown error" });
-    form.setLoading(false);
-  }
-
   async function addCompany(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (
-      !form.validate({
-        name: (v: string) => (!v ? "Company name required" : ""),
-      })
-    )
-      return;
     form.setLoading(true);
+    if (!supabase) return;
     const { error } = await supabase
       .from("companies")
       .insert([{ name: form.values.name }]);
     if (!error) {
-      form.setValues({ name: "" });
-      form.setSuccess("Company added!");
-      fetchCompanies();
+      // Refresh list
+      if (!supabase) return;
+      const { data } = await supabase.from("companies").select("*");
+      setCompanies(data || []);
+      form.setSuccess("Company added successfully!");
     } else {
       form.setErrors({ submit: error.message });
     }
@@ -50,14 +46,20 @@ export default function CompaniesPage() {
 
   async function deleteCompany(id: number) {
     form.setLoading(true);
+    if (!supabase) return;
     const { error } = await supabase.from("companies").delete().eq("id", id);
-    if (!error) fetchCompanies();
-    else form.setErrors({ delete: error.message });
+    if (!error) {
+      // Refresh list
+      if (!supabase) return;
+      const { data } = await supabase.from("companies").select("*");
+      setCompanies(data || []);
+      form.setSuccess("Company deleted successfully!");
+    } else {
+      form.setErrors({ delete: error.message });
+    }
     form.setLoading(false);
   }
-
   return (
-    <AuthProvider>
       <div className="p-8 max-w-xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Companies</h1>
         <ErrorBanner
@@ -103,6 +105,5 @@ export default function CompaniesPage() {
           ))}
         </ul>
       </div>
-    </AuthProvider>
   );
 }
