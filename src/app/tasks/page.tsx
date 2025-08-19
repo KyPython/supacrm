@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { AuthProvider, useAuth } from "@/context/AuthContext.js";
+import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
 function TasksPageContent() {
@@ -110,9 +110,5 @@ function TasksPageContent() {
 }
 
 export default function TasksPage() {
-  return (
-    <AuthProvider>
-      <TasksPageContent />
-    </AuthProvider>
-  );
+  return <TasksPageContent />;
 }

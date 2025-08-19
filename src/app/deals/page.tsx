@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { AuthProvider, useAuth } from "@/context/AuthContext.js";
+import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
 function DealsPageContent() {
@@ -135,9 +135,5 @@ function DealsPageContent() {
 }
 
 export default function DealsPage() {
-  return (
-    <AuthProvider>
-      <DealsPageContent />
-    </AuthProvider>
-  );
+  return <DealsPageContent />;
 }

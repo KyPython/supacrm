@@ -1,5 +1,4 @@
 "use client";
-import { AuthProvider } from "@/context/AuthContext.js";
 import { useAuth } from "@/context/AuthContext.js";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -102,9 +101,5 @@ function SignUpContent() {
 }
 
 export default function SignUp() {
-  return (
-    <AuthProvider>
-      <SignUpContent />
-    </AuthProvider>
-  );
+  return <SignUpContent />;
 }

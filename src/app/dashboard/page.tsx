@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { AuthProvider } from "@/context/AuthContext.js";
 
 function DashboardContent() {
   const [counts, setCounts] = useState({
@@ -79,9 +78,5 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
-  return (
-    <AuthProvider>
-      <DashboardContent />
-    </AuthProvider>
-  );
+  return <DashboardContent />;
 }

@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
-import { useAuth, AuthProvider } from "@/context/AuthContext.js";
+import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 import { supabase } from "@/lib/supabase";
 
@@ -76,64 +76,60 @@ export default function ContactsPage() {
   }
 
   return (
-    <AuthProvider>
-      <div className="p-8 max-w-xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Contacts</h1>
-        {error && (
-          <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-100 text-green-700 p-2 mb-2 rounded">
-            {success}
-          </div>
-        )}
-        <form onSubmit={addContact} className="mb-6 flex gap-2 items-center">
-          <input
-            name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
-            className={`border px-3 py-2 rounded w-full ${
-              error ? "border-red-400" : ""
-            }`}
-          />
-          <input
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className={`border px-3 py-2 rounded w-full ${
-              error ? "border-red-400" : ""
-            }`}
-          />
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-5 py-2 rounded shadow"
-            disabled={contactsLoading}
-          >
-            Add
-          </button>
-        </form>
-        {contactsLoading && <p>Loading...</p>}
-        <ul className="divide-y">
-          {contacts.map((c) => (
-            <li key={c.id} className="flex justify-between items-center py-3">
-              <span className="font-medium">
-                {c.name} <span className="text-gray-500">({c.email})</span>
-              </span>
-              <button
-                onClick={() => deleteContact(c.id)}
-                className="text-red-500 hover:underline"
-                disabled={contactsLoading}
-              >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </AuthProvider>
+    <div className="p-8 max-w-xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Contacts</h1>
+      {error && (
+        <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>
+      )}
+      {success && (
+        <div className="bg-green-100 text-green-700 p-2 mb-2 rounded">
+          {success}
+        </div>
+      )}
+      <form onSubmit={addContact} className="mb-6 flex gap-2 items-center">
+        <input
+          name="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          className={`border px-3 py-2 rounded w-full ${
+            error ? "border-red-400" : ""
+          }`}
+        />
+        <input
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className={`border px-3 py-2 rounded w-full ${
+            error ? "border-red-400" : ""
+          }`}
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-5 py-2 rounded shadow"
+          disabled={contactsLoading}
+        >
+          Add
+        </button>
+      </form>
+      {contactsLoading && <p>Loading...</p>}
+      <ul className="divide-y">
+        {contacts.map((c) => (
+          <li key={c.id} className="flex justify-between items-center py-3">
+            <span className="font-medium">
+              {c.name} <span className="text-gray-500">({c.email})</span>
+            </span>
+            <button
+              onClick={() => deleteContact(c.id)}
+              className="text-red-500 hover:underline"
+              disabled={contactsLoading}
+            >
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

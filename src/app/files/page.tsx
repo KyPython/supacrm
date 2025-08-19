@@ -95,54 +95,54 @@ export default function FileUploadPage() {
   }
 
   return (
-      <div className="p-8 max-w-xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">File Upload</h1>
-        {/* Error and success banners */}
-        <ErrorBanner error={generalError || form.errors.file} />
-        <SuccessBanner message={form.success} />
-        {/* File upload form */}
-        <form onSubmit={handleUpload} className="mb-6 flex gap-2 items-center">
-          <input
-            type="file"
-            name="file"
-            onChange={handleFileChange}
-            className={`border px-3 py-2 rounded w-full ${
-              form.errors.file ? "border-red-400" : ""
-            }`}
-          />
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-5 py-2 rounded shadow"
-            disabled={form.loading}
-          >
-            Upload
-          </button>
-        </form>
+    <div className="p-8 max-w-xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">File Upload</h1>
+      {/* Error and success banners */}
+      <ErrorBanner error={generalError || form.errors.file} />
+      <SuccessBanner message={form.success} />
+      {/* File upload form */}
+      <form onSubmit={handleUpload} className="mb-6 flex gap-2 items-center">
+        <input
+          type="file"
+          name="file"
+          onChange={handleFileChange}
+          className={`border px-3 py-2 rounded w-full ${
+            form.errors.file ? "border-red-400" : ""
+          }`}
+        />
         <button
-          onClick={fetchFiles}
-          className="mb-4 bg-gray-200 px-3 py-2 rounded shadow"
+          type="submit"
+          className="bg-blue-500 text-white px-5 py-2 rounded shadow"
+          disabled={form.loading}
         >
-          Refresh Files
+          Upload
         </button>
-        {/* Files list */}
-        {form.loading && <p>Loading...</p>}
-        <ul className="divide-y">
-          {files.map((f) => (
-            <li
-              key={(f as FileObject).name}
-              className="flex justify-between items-center py-3"
+      </form>
+      <button
+        onClick={fetchFiles}
+        className="mb-4 bg-gray-200 px-3 py-2 rounded shadow"
+      >
+        Refresh Files
+      </button>
+      {/* Files list */}
+      {form.loading && <p>Loading...</p>}
+      <ul className="divide-y">
+        {files.map((f) => (
+          <li
+            key={(f as FileObject).name}
+            className="flex justify-between items-center py-3"
+          >
+            <span className="font-medium">{(f as FileObject).name}</span>
+            <button
+              onClick={() => handleDownload((f as FileObject).name)}
+              className="text-blue-500 hover:underline"
+              disabled={form.loading}
             >
-              <span className="font-medium">{(f as FileObject).name}</span>
-              <button
-                onClick={() => handleDownload((f as FileObject).name)}
-                className="text-blue-500 hover:underline"
-                disabled={form.loading}
-              >
-                Download
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+              Download
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

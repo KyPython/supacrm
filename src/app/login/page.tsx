@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AuthProvider, useAuth } from "@/context/AuthContext.js";
+import { useAuth } from "@/context/AuthContext.js";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
