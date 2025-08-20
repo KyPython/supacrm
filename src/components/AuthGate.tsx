@@ -66,21 +66,32 @@ export default function AuthGate() {
 
         if (!client) {
           debug("[AuthGate] no supabase client available");
+          // If we're already at the root path, don't attempt to replace the
+          // location with the same path — that can cause reload loops on some
+          // hosts. Instead, leave the user on the landing page and prompt them
+          // to sign in from the UI. If we're on a protected route (not root),
+          // we still navigate them to the auth page.
           if (!isAuthPage) {
-            debug(
-              "[AuthGate] no client and not on auth page — forcing redirect to /"
-            );
-            try {
-              router.replace("/");
-            } catch (err) {
-              debugWarn(
-                "[AuthGate] router.replace failed, falling back to window.location.replace",
-                err
+            if (pathname === "/") {
+              debug(
+                "[AuthGate] no client and on root; leaving as-is to avoid reload loop"
+              );
+            } else {
+              debug(
+                "[AuthGate] no client and not on root; redirecting to /login"
               );
               try {
-                window.location.replace("/");
-              } catch (e) {
-                debugError("[AuthGate] window.location.replace failed", e);
+                router.replace("/login");
+              } catch (err) {
+                debugWarn(
+                  "[AuthGate] router.replace failed, falling back to window.location.replace",
+                  err
+                );
+                try {
+                  window.location.replace("/login");
+                } catch (e) {
+                  debugError("[AuthGate] window.location.replace failed", e);
+                }
               }
             }
           }

@@ -32,11 +32,13 @@ export default function ForcedRedirect() {
         const session = getSessionResult?.data?.session ?? null;
         debug("[ForcedRedirect] session ->", session);
         if (!session) {
-          try {
-            window.location.replace("/");
-          } catch (e) {
-            debugError("[ForcedRedirect] replace failed", e);
-          }
+          // We're already on the root path (this component only runs on '/').
+          // Replacing the URL with the same path causes a reload loop on some
+          // hosts (router/window.replace('/')). Avoid redirecting here.
+          debug(
+            "[ForcedRedirect] unauthenticated on root; not redirecting to avoid reload loop"
+          );
+          return;
         }
       } catch (err) {
         debugError("[ForcedRedirect] error checking session", err);
