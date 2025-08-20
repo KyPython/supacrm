@@ -57,6 +57,16 @@ if (typeof window !== 'undefined') {
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else {
       // If supabase was created above, attach it; otherwise create a client now.
+      try {
+        // Masked runtime diagnostic: only log the host portion so we can
+        // confirm which public endpoint the client is using without leaking
+        // secrets.
+        const host = new URL(url as string).host;
+        // eslint-disable-next-line no-console
+        console.warn('[supabase] runtime public host=', host);
+      } catch (e) {
+        // ignore
+      }
       if (!supabase) {
         (window as unknown as { supabase: SupabaseClient | null }).supabase = createClient(url, key);
       } else {
