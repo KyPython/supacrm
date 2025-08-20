@@ -94,13 +94,13 @@ export default function ContactsPage() {
       <div className="card">
         <h1 className="h1">Contacts</h1>
         {error && (
-          <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">
-            {error}
+          <div className="mb-3">
+            <div className="alert alert-danger">{error}</div>
           </div>
         )}
         {success && (
-          <div className="bg-green-100 text-green-700 p-2 mb-2 rounded">
-            {success}
+          <div className="mb-3">
+            <div className="alert alert-success">{success}</div>
           </div>
         )}
         <form onSubmit={addContact} className="mb-6 flex gap-2 items-center">
@@ -120,8 +120,13 @@ export default function ContactsPage() {
           />
           <button
             type="submit"
-            className="bg-blue-500 text-white px-5 py-2 rounded shadow"
             disabled={contactsLoading}
+            style={{
+              background: "var(--brand)",
+              color: "var(--fg)",
+              padding: "0.5rem 1.25rem",
+              borderRadius: 8,
+            }}
           >
             Add
           </button>
@@ -132,12 +137,12 @@ export default function ContactsPage() {
             <li key={c.id} className="flex justify-between items-center py-3">
               <span className="font-medium">
                 {`${c.first_name ?? ""} ${c.last_name ?? ""}`.trim()}{" "}
-                <span className="text-gray-500">({c.email})</span>
+                <span style={{ color: "var(--muted)" }}>({c.email})</span>
               </span>
               <button
                 onClick={() => deleteContact(c.id)}
-                className="text-red-500 hover:underline"
                 disabled={contactsLoading}
+                style={{ color: "var(--danger-600)" }}
               >
                 Delete
               </button>

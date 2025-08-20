@@ -49,16 +49,15 @@ function DashboardContent() {
   return (
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      {error && (
-        <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>
-      )}
+      {error && <div className="alert alert-danger">{error}</div>}
       {loading ? (
         <p>Loading...</p>
       ) : (
         <div className="grid grid-cols-2 gap-6">
           <Link
             href="/companies"
-            className="bg-blue-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            className="p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            style={{ background: "var(--brand-10)" }}
           >
             <h2 className="text-xl font-semibold">Companies</h2>
             <p className="text-2xl">{counts.companies}</p>
@@ -66,7 +65,8 @@ function DashboardContent() {
 
           <Link
             href="/contacts"
-            className="bg-green-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            className="p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            style={{ background: "var(--success-10)" }}
           >
             <h2 className="text-xl font-semibold">Contacts</h2>
             <p className="text-2xl">{counts.contacts}</p>
@@ -74,7 +74,8 @@ function DashboardContent() {
 
           <Link
             href="/deals"
-            className="bg-yellow-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            className="p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            style={{ background: "var(--warning-10)" }}
           >
             <h2 className="text-xl font-semibold">Deals</h2>
             <p className="text-2xl">{counts.deals}</p>
@@ -82,7 +83,8 @@ function DashboardContent() {
 
           <Link
             href="/tasks"
-            className="bg-purple-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            className="p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+            style={{ background: "var(--purple-10)" }}
           >
             <h2 className="text-xl font-semibold">Tasks</h2>
             <p className="text-2xl">{counts.tasks}</p>

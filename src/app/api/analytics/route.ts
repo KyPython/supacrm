@@ -44,5 +44,5 @@ export async function POST(req: Request) {
     // swallow server errors
   }
 
-  return NextResponse.json({ ok: true }, { status: 204 });
+  return new NextResponse(null, { status: 204 });
 }

@@ -69,7 +69,8 @@ export default function ModalWrapper({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      style={{ background: "rgba(2,6,23,0.4)" }}
       onMouseDown={(e) => {
         // clicking backdrop closes
         if (e.target === e.currentTarget) onClose?.();

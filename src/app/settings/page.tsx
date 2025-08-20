@@ -5,11 +5,15 @@ import { useAuth } from "@/context/AuthContext.js";
 import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button";
+import Alert from "@/components/Alert";
 
 export default function SettingsPage() {
   const { user } = useAuth() ?? {};
   const searchParams = useSearchParams();
   const debug = !!searchParams?.get?.("__debug");
+  const supabaseAvailable = !!supabase;
+  const debugApiEnabled =
+    typeof window !== "undefined" && process.env.NODE_ENV !== "production";
 
   const debugUser = debug
     ? {
@@ -20,8 +24,6 @@ export default function SettingsPage() {
       }
     : null;
   const effectiveUser = (user as any) ?? debugUser;
-
-  const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -40,6 +42,7 @@ export default function SettingsPage() {
     sessionTimeout: 30,
     passwordExpiry: 90,
   });
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -95,6 +98,14 @@ export default function SettingsPage() {
               sessionTimeout: data.session_timeout ?? 30,
               passwordExpiry: data.password_expiry ?? 90,
             });
+            if (data.theme) {
+              try {
+                // set theme saved in DB to localStorage so ThemeProvider picks it up
+                localStorage.setItem("supa_theme", data.theme);
+              } catch (e) {
+                /* ignore */
+              }
+            }
           }
         }
       } catch (err) {
@@ -116,34 +127,17 @@ export default function SettingsPage() {
     setSaving(true);
     setError("");
     try {
-      if (debug) {
-        const saved = JSON.parse(
-          localStorage.getItem("settings_debug") || "{}"
-        );
-        saved.profile = profile;
-        localStorage.setItem("settings_debug", JSON.stringify(saved));
-        try {
-          (await import("@/lib/analytics")).track(
-            "settings_profile_saved_debug"
-          );
-        } catch {}
-      } else {
-        if (!supabase) throw new Error("Supabase client not available");
-        const { error: updErr } = await supabase
-          .from("user_profiles")
-          .update({
-            first_name: profile.firstName,
-            last_name: profile.lastName,
-          })
-          .eq("id", (effectiveUser as any).id);
-        if (updErr) throw updErr;
-        try {
-          (await import("@/lib/analytics")).track("settings_profile_saved");
-        } catch {}
-      }
-    } catch (err) {
+      const { saveProfileHandler } = await import("./handlers");
+      await saveProfileHandler({
+        effectiveUser,
+        profile: { firstName: profile.firstName, lastName: profile.lastName },
+        supabase,
+        debug: debug,
+        debugApiEnabled,
+      });
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to save profile");
+      setError(String(err?.message ?? err));
     } finally {
       setSaving(false);
     }
@@ -154,47 +148,17 @@ export default function SettingsPage() {
     setSaving(true);
     setError("");
     try {
-      if (debug) {
-        const saved = JSON.parse(
-          localStorage.getItem("settings_debug") || "{}"
-        );
-        saved.notifications = notifications;
-        localStorage.setItem("settings_debug", JSON.stringify(saved));
-        try {
-          (await import("@/lib/analytics")).track(
-            "settings_notifications_saved_debug"
-          );
-        } catch {}
-      } else {
-        if (!supabase) throw new Error("Supabase client not available");
-        const id = (effectiveUser as any).id;
-        const payload = {
-          id,
-          email_notifications: notifications.email,
-          sms_notifications: notifications.sms,
-          weekly_reports: notifications.weekly,
-        };
-        const { error: upsertErr } = await supabase
-          .from("user_settings")
-          .upsert(payload, { onConflict: "id" });
-        if (upsertErr) {
-          if ((upsertErr as any)?.status === 409) {
-            const { error: updErr } = await supabase
-              .from("user_settings")
-              .update(payload)
-              .eq("id", id);
-            if (updErr) throw updErr;
-          } else throw upsertErr;
-        }
-        try {
-          (await import("@/lib/analytics")).track(
-            "settings_notifications_saved"
-          );
-        } catch {}
-      }
-    } catch (err) {
+      const { saveNotificationsHandler } = await import("./handlers");
+      await saveNotificationsHandler({
+        effectiveUser,
+        notifications,
+        supabase,
+        debug,
+        debugApiEnabled,
+      });
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to save notifications");
+      setError(String(err?.message ?? err));
     } finally {
       setSaving(false);
     }
@@ -217,32 +181,61 @@ export default function SettingsPage() {
           );
         } catch {}
       } else {
-        if (!supabase) throw new Error("Supabase client not available");
         const id = (effectiveUser as any).id;
         const payload = {
           id,
           session_timeout: security.sessionTimeout,
           password_expiry: security.passwordExpiry,
         };
-        const { error: upsertErr } = await supabase
-          .from("user_settings")
-          .upsert(payload, { onConflict: "id" });
-        if (upsertErr) {
-          if ((upsertErr as any)?.status === 409) {
-            const { error: updErr } = await supabase
+        if (supabase) {
+          try {
+            const { data, error } = await supabase
               .from("user_settings")
-              .update(payload)
-              .eq("id", id);
-            if (updErr) throw updErr;
-          } else throw upsertErr;
+              .upsert(payload, { onConflict: "id" });
+            console.debug("[settings] user_settings upsert", { data, error });
+            if (error) throw error;
+            try {
+              (await import("@/lib/analytics")).track(
+                "settings_security_saved"
+              );
+            } catch {}
+            return;
+          } catch (e) {
+            console.warn(
+              "[settings] supabase user_settings upsert failed, will try debug API if available",
+              e
+            );
+          }
         }
-        try {
-          (await import("@/lib/analytics")).track("settings_security_saved");
-        } catch {}
+
+        if (debugApiEnabled) {
+          try {
+            const res = await fetch("/api/debug/settings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id, security: payload }),
+            });
+            const body = await res.json().catch(() => null);
+            console.debug("[settings] debug api response (security)", body);
+            if (body?.error) throw new Error(String(body.error));
+            try {
+              (await import("@/lib/analytics")).track(
+                "settings_security_saved_debug_api"
+              );
+            } catch {}
+            return;
+          } catch (apiErr) {
+            console.error("[settings] debug API security save failed", apiErr);
+            throw apiErr;
+          }
+        }
+        throw new Error(
+          "No available save mechanism (supabase missing and debug API disabled)"
+        );
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to save security settings");
+      setError(String(err?.message ?? err));
     } finally {
       setSaving(false);
     }
@@ -257,39 +250,78 @@ export default function SettingsPage() {
           <h1 className="h2">Settings</h1>
         </div>
 
-        {error && <div className="text-red-600 mb-3">{error}</div>}
+        {!supabaseAvailable && (
+          <div className="mb-3">
+            <Alert variant="danger">
+              Supabase client not configured; settings cannot be saved from this
+              build.
+              {debugApiEnabled && (
+                <span>
+                  {" "}
+                  Falling back to local debug API for saves in development.
+                </span>
+              )}
+            </Alert>
+          </div>
+        )}
 
-        <div className="border rounded bg-white shadow-sm">
-          <div className="border-b px-4 py-3">
-            <nav className="flex space-x-4">
+        {error && (
+          <div className="mb-3">
+            <Alert variant="danger">{error}</Alert>
+          </div>
+        )}
+
+        <div
+          className="rounded"
+          style={{
+            background: "var(--surface)",
+            boxShadow: "0 1px 3px rgba(2,6,23,0.04)",
+          }}
+        >
+          <div
+            style={{
+              borderBottom: "1px solid var(--surface-20)",
+              padding: "0.75rem 1rem",
+            }}
+          >
+            <nav style={{ display: "flex", gap: "0.5rem" }}>
               <button
-                className={`py-2 px-3 ${
-                  activeTab === 0 ? "border-b-2 border-blue-500" : ""
-                }`}
+                className={`py-2 px-3 ${activeTab === 0 ? "border-b-2" : ""}`}
                 onClick={() => setActiveTab(0)}
+                style={
+                  activeTab === 0
+                    ? { borderBottomColor: "var(--brand)" }
+                    : undefined
+                }
               >
                 Profile
               </button>
               <button
-                className={`py-2 px-3 ${
-                  activeTab === 1 ? "border-b-2 border-blue-500" : ""
-                }`}
+                className={`py-2 px-3 ${activeTab === 1 ? "border-b-2" : ""}`}
                 onClick={() => setActiveTab(1)}
+                style={
+                  activeTab === 1
+                    ? { borderBottomColor: "var(--brand)" }
+                    : undefined
+                }
               >
                 Notifications
               </button>
               <button
-                className={`py-2 px-3 ${
-                  activeTab === 2 ? "border-b-2 border-blue-500" : ""
-                }`}
+                className={`py-2 px-3 ${activeTab === 2 ? "border-b-2" : ""}`}
                 onClick={() => setActiveTab(2)}
+                style={
+                  activeTab === 2
+                    ? { borderBottomColor: "var(--brand)" }
+                    : undefined
+                }
               >
                 Security
               </button>
             </nav>
           </div>
 
-          <div className="p-4">
+          <div style={{ padding: "1rem" }}>
             {activeTab === 0 && (
               <form onSubmit={saveProfile} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -325,7 +357,7 @@ export default function SettingsPage() {
                     value={profile.email}
                     disabled
                     className="mt-1 block w-full form-input"
-                    style={{ background: "#f3f4f6" }}
+                    style={{ background: "var(--card)" }}
                   />
                 </div>
 
@@ -333,7 +365,7 @@ export default function SettingsPage() {
                   <Button
                     type="submit"
                     className="inline-flex"
-                    disabled={saving}
+                    disabled={saving || !supabaseAvailable}
                     variant="primary"
                   >
                     {saving ? "Saving..." : "Save Profile"}
@@ -377,7 +409,7 @@ export default function SettingsPage() {
                 <div>
                   <Button
                     onClick={saveNotifications}
-                    disabled={saving}
+                    disabled={saving || !supabaseAvailable}
                     variant="primary"
                   >
                     {saving ? "Saving..." : "Save Notifications"}
@@ -432,7 +464,7 @@ export default function SettingsPage() {
                 <div>
                   <Button
                     onClick={saveSecurity}
-                    disabled={saving}
+                    disabled={saving || !supabaseAvailable}
                     variant="primary"
                   >
                     {saving ? "Saving..." : "Save Security"}

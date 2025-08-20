@@ -84,6 +84,11 @@ export default function CompaniesPage() {
             className={`form-input w-full ${
               form.errors.name ? "border-red-400" : ""
             }`}
+            style={
+              form.errors.name
+                ? { borderColor: "var(--danger-600)" }
+                : undefined
+            }
           />
           <Button
             type="submit"
@@ -103,7 +108,6 @@ export default function CompaniesPage() {
               <button
                 onClick={() => deleteCompany(c.id)}
                 style={{ color: "var(--brand)" }}
-                className="hover:underline"
                 disabled={form.loading}
               >
                 Delete

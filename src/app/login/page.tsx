@@ -105,15 +105,15 @@ function LoginForm() {
           </div>
         )}
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 alert alert-danger">{error}</div>}
 
         <form onSubmit={handleEmailPasswordLogin} className="mb-6">
           <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="email">
+            <label
+              className="block"
+              style={{ color: "var(--muted)", marginBottom: ".5rem" }}
+              htmlFor="email"
+            >
               Email
             </label>
             <input
@@ -127,7 +127,11 @@ function LoginForm() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="password">
+            <label
+              className="block"
+              style={{ color: "var(--muted)", marginBottom: ".5rem" }}
+              htmlFor="password"
+            >
               Password
             </label>
             <input
@@ -151,7 +155,7 @@ function LoginForm() {
         </form>
 
         <div className="text-center mb-4">
-          <span className="text-gray-500">or</span>
+          <span style={{ color: "var(--muted)" }}>or</span>
         </div>
 
         <Button
@@ -164,7 +168,7 @@ function LoginForm() {
         </Button>
 
         <div className="text-center mt-4">
-          <Link href="/signup" className="text-brand hover:text-brand-dark">
+          <Link href="/signup" style={{ color: "var(--brand)" }}>
             Don&apos;t have an account? Sign up
           </Link>
         </div>

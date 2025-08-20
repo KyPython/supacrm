@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
         const { data: { session } } = await supabase.auth.getSession();
         debug('[AuthProvider] initial session', session);
         if (session) {
-          const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).single();
           if (profileError) debugWarn('[AuthProvider] profile fetch error (ignored):', profileError);
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 
@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
       debug('[AuthProvider] auth state change', event, session);
       try {
         if (session) {
-          const { data: profile, error: profileError } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).single();
           if (profileError) debugWarn('[AuthProvider] profile fetch error (ignored):', profileError);
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 

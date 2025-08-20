@@ -51,18 +51,10 @@ export function useForm<
 // Error and success banners
 export function ErrorBanner({ error }: { error?: string }) {
   if (!error) return null;
-  return (
-    <div className="bg-red-100 text-red-700 p-2 rounded mb-2 border border-red-300">
-      {error}
-    </div>
-  );
+  return <div className="alert alert-danger mb-2">{error}</div>;
 }
 
 export function SuccessBanner({ message }: { message?: string }) {
   if (!message) return null;
-  return (
-    <div className="bg-green-100 text-green-700 p-2 rounded mb-2 border border-green-300">
-      {message}
-    </div>
-  );
+  return <div className="alert alert-success mb-2">{message}</div>;
 }

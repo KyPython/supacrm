@@ -217,61 +217,79 @@ export default function Page() {
   return (
     <div className="flex min-h-screen">
       <ToastContainer position="top-right" autoClose={6000} />
-      <nav className="w-64 bg-white shadow-lg h-screen p-6 flex flex-col gap-4">
+      <nav
+        className="w-64"
+        style={{
+          background: "var(--card)",
+          boxShadow: "0 6px 18px rgba(2,6,23,0.06)",
+          height: "100vh",
+          padding: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+      >
         <h2 className="text-2xl font-bold mb-6">SupaCRM</h2>
         <ul className="flex flex-col gap-2">
           <li>
             <Link
               href="/dashboard"
-              className="block py-2 px-3 rounded hover:bg-gray-100"
+              className="block py-2 px-3 rounded nav-link"
             >
               Dashboard
             </Link>
           </li>
           <li>
-            <Link
-              href="/companies"
-              className="block py-2 px-3 rounded hover:bg-gray-100"
-            >
-              Companies
-            </Link>
+            <li>
+              <Link
+                href="/companies"
+                className="block py-2 px-3 rounded nav-link"
+              >
+                Companies
+              </Link>
+            </li>
           </li>
           <li>
-            <Link
-              href="/contacts"
-              className="block py-2 px-3 rounded hover:bg-gray-100"
-            >
-              Contacts
-            </Link>
+            <li>
+              <Link
+                href="/contacts"
+                className="block py-2 px-3 rounded nav-link"
+              >
+                Contacts
+              </Link>
+            </li>
           </li>
           <li>
-            <Link
-              href="/deals"
-              className="block py-2 px-3 rounded hover:bg-gray-100"
-            >
-              Deals
-            </Link>
+            <li>
+              <Link href="/deals" className="block py-2 px-3 rounded nav-link">
+                Deals
+              </Link>
+            </li>
           </li>
           <li>
-            <Link
-              href="/files"
-              className="block py-2 px-3 rounded hover:bg-gray-100"
-            >
-              Files
-            </Link>
+            <li>
+              <Link href="/files" className="block py-2 px-3 rounded nav-link">
+                Files
+              </Link>
+            </li>
           </li>
           <li>
-            <Link
-              href="/tasks"
-              className="block py-2 px-3 rounded hover:bg-gray-100"
-            >
-              Tasks
-            </Link>
+            <li>
+              <Link href="/tasks" className="block py-2 px-3 rounded nav-link">
+                Tasks
+              </Link>
+            </li>
           </li>
         </ul>
         <button
           onClick={logout}
-          className="mt-auto bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+          className="mt-auto"
+          style={{
+            background: "var(--danger-600)",
+            color: "white",
+            padding: "0.5rem 1rem",
+            borderRadius: 8,
+          }}
         >
           Log out
         </button>
@@ -294,8 +312,13 @@ export default function Page() {
               </div>
               <div>
                 <button
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-teal-500 text-white rounded"
+                  className="inline-flex items-center gap-2 px-3 py-2"
                   onClick={() => setShowNewContact(true)}
+                  style={{
+                    background: "var(--brand)",
+                    color: "var(--fg)",
+                    borderRadius: 8,
+                  }}
                 >
                   <AddIcon fontSize="small" /> New Contact
                 </button>
@@ -305,34 +328,60 @@ export default function Page() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mt-6">
               <Link
                 href="/companies"
-                className="bg-blue-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+                className="p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+                style={{ background: "var(--brand-10)" }}
               >
                 <h3 className="font-semibold text-lg">
-                  <BusinessIcon className="inline-block mr-2 text-teal-600" />{" "}
+                  <BusinessIcon
+                    className="inline-block mr-2"
+                    style={{ color: "var(--brand)" }}
+                  />{" "}
                   Companies
                 </h3>
-                <p className="text-2xl font-bold text-blue-700">
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--brand)" }}
+                >
                   {stats.companies}
                 </p>
-                <div className="mt-2 text-sm text-blue-600">
+                <div className="mt-2 text-sm" style={{ color: "var(--brand)" }}>
                   View companies →
                 </div>
               </Link>
 
-              <div className="bg-green-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow">
+              <div
+                className="p-4 rounded shadow text-center hover:shadow-md transition-shadow"
+                style={{ background: "var(--success-10)" }}
+              >
                 <h3 className="font-semibold text-lg">
-                  <PeopleIcon className="inline-block mr-2 text-green-600" />{" "}
+                  <PeopleIcon
+                    className="inline-block mr-2"
+                    style={{ color: "var(--success)" }}
+                  />{" "}
                   Contacts
                 </h3>
-                <p className="text-2xl font-bold text-green-700">
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--success-600)" }}
+                >
                   {stats.contacts}
                 </p>
                 <div className="mt-2 flex justify-center gap-3">
-                  <Link href="/contacts" className="text-sm text-green-600">
+                  <Link
+                    href="/contacts"
+                    className="text-sm"
+                    style={{ color: "var(--success)" }}
+                  >
                     View →
                   </Link>
                   <button
-                    className="text-sm text-white bg-green-600 px-2 py-1 rounded"
+                    className="text-sm"
+                    style={{
+                      color: "white",
+                      background: "var(--success)",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: 6,
+                    }}
                     onClick={() => setShowNewContact(true)}
                   >
                     New contact
@@ -342,32 +391,63 @@ export default function Page() {
 
               <Link
                 href="/deals"
-                className="bg-yellow-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+                className="p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+                style={{ background: "var(--warning-10)" }}
               >
                 <h3 className="font-semibold text-lg">
-                  <LocalOfferIcon className="inline-block mr-2 text-yellow-600" />{" "}
+                  <LocalOfferIcon
+                    className="inline-block mr-2"
+                    style={{ color: "var(--warning)" }}
+                  />{" "}
                   Deals
                 </h3>
-                <p className="text-2xl font-bold text-yellow-700">
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--warning-600)" }}
+                >
                   {stats.deals}
                 </p>
-                <div className="mt-2 text-sm text-yellow-600">View deals →</div>
+                <div
+                  className="mt-2 text-sm"
+                  style={{ color: "var(--warning)" }}
+                >
+                  View deals →
+                </div>
               </Link>
 
-              <div className="bg-indigo-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow">
+              <div
+                className="p-4 rounded shadow text-center hover:shadow-md transition-shadow"
+                style={{ background: "var(--indigo-10)" }}
+              >
                 <h3 className="font-semibold text-lg">
-                  <FolderIcon className="inline-block mr-2 text-indigo-700" />{" "}
+                  <FolderIcon
+                    className="inline-block mr-2"
+                    style={{ color: "var(--indigo)" }}
+                  />{" "}
                   Files
                 </h3>
-                <p className="text-2xl font-bold text-indigo-700">
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--indigo-600)" }}
+                >
                   {stats.files}
                 </p>
                 <div className="mt-2 flex justify-center gap-3">
-                  <Link href="/files" className="text-sm text-indigo-600">
+                  <Link
+                    href="/files"
+                    className="text-sm"
+                    style={{ color: "var(--indigo)" }}
+                  >
                     View →
                   </Link>
                   <button
-                    className="text-sm text-white bg-indigo-600 px-2 py-1 rounded"
+                    className="text-sm"
+                    style={{
+                      color: "white",
+                      background: "var(--indigo)",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: 6,
+                    }}
                     onClick={() => setShowUploadFile(true)}
                   >
                     Upload file
@@ -377,16 +457,28 @@ export default function Page() {
 
               <Link
                 href="/tasks"
-                className="bg-purple-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+                className="p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+                style={{ background: "var(--purple-10)" }}
               >
                 <h3 className="font-semibold text-lg">
-                  <TaskIcon className="inline-block mr-2 text-purple-600" />{" "}
+                  <TaskIcon
+                    className="inline-block mr-2"
+                    style={{ color: "var(--purple-600)" }}
+                  />{" "}
                   Tasks
                 </h3>
-                <p className="text-2xl font-bold text-purple-700">
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--purple-600)" }}
+                >
                   {stats.tasks}
                 </p>
-                <div className="mt-2 text-sm text-purple-600">View tasks →</div>
+                <div
+                  className="mt-2 text-sm"
+                  style={{ color: "var(--purple-600)" }}
+                >
+                  View tasks →
+                </div>
               </Link>
             </div>
           </div>

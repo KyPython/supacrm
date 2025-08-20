@@ -28,6 +28,7 @@ import TaskIcon from "@mui/icons-material/Task";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/ExitToApp";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@mui/material/styles";
 
 const drawerWidth = 280;
@@ -80,7 +81,7 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
         sx={{
           p: 3,
           textAlign: "center",
-          borderBottom: `1px solid rgba(255,255,255,0.04)`,
+          borderBottom: `1px solid var(--surface-20)`,
         }}
       >
         <Typography
@@ -112,7 +113,7 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
             display: "flex",
             alignItems: "center",
             p: 2,
-            backgroundColor: "rgba(255,255,255,0.02)",
+            backgroundColor: "var(--surface-10)",
             borderRadius: 2,
             mb: 1,
           }}
@@ -121,14 +122,10 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
             {user?.first_name?.[0] || user?.email?.[0]}
           </Avatar>
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" noWrap sx={{ color: "#fff" }}>
+            <Typography variant="subtitle2" noWrap sx={{ color: "var(--fg)" }}>
               {String(user?.full_name || user?.name || user?.email || "")}
             </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: "rgba(255,255,255,0.7)" }}
-              noWrap
-            >
+            <Typography variant="caption" sx={{ color: "var(--muted)" }} noWrap>
               {String(user?.role || "User")}
             </Typography>
           </Box>
@@ -136,7 +133,7 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
         <Button
           fullWidth
           variant="outlined"
-          sx={{ borderColor: "rgba(255,255,255,0.06)", color: "#fff" }}
+          sx={{ borderColor: "var(--surface-20)", color: "var(--fg)" }}
           startIcon={<LogoutIcon />}
           onClick={() => {
             if (confirm("Are you sure you want to logout?")) logout();
@@ -155,8 +152,8 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          backgroundColor: BRAND.primary,
-          color: "#042022",
+          backgroundColor: "var(--brand)",
+          color: "var(--fg)",
         }}
       >
         <Toolbar>
@@ -171,6 +168,9 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             SupaCRM
           </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ThemeToggle />
+          </Box>
         </Toolbar>
       </AppBar>
 

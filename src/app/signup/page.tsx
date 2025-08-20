@@ -74,7 +74,11 @@ function SignUpContent() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="email">
+            <label
+              className="block"
+              style={{ color: "var(--muted)", marginBottom: ".5rem" }}
+              htmlFor="email"
+            >
               Email
             </label>
             <input
@@ -88,7 +92,11 @@ function SignUpContent() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="password">
+            <label
+              className="block"
+              style={{ color: "var(--muted)", marginBottom: ".5rem" }}
+              htmlFor="password"
+            >
               Password
             </label>
             <input
@@ -113,7 +121,7 @@ function SignUpContent() {
         </form>
 
         <div className="text-center mt-4">
-          <Link href="/login" className="text-blue-500 hover:text-blue-700">
+          <Link href="/login" style={{ color: "var(--brand)" }}>
             Already have an account? Log in
           </Link>
         </div>
