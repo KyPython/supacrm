@@ -53,7 +53,10 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
   // so users can reach Settings and other pages from the default landing page.
   if (pathname?.startsWith("/auth")) return null;
   if (loading) return null;
-  if (!user) return null;
+  // If the user is not authenticated, still render the page children so the
+  // public landing or auth pages are visible. AppRouter's navigation and
+  // drawer should only be shown for authenticated users.
+  if (!user) return <>{children}</>;
 
   const menuItems = [
     { text: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
