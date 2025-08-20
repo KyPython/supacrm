@@ -1,159 +1,186 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext.js";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
+import Avatar from "@mui/material/Avatar";
+import Divider from "@mui/material/Divider";
+import Button from "@mui/material/Button";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import MenuIcon from "@mui/icons-material/Menu";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PeopleIcon from "@mui/icons-material/People";
+import BusinessIcon from "@mui/icons-material/Business";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LogoutIcon from "@mui/icons-material/ExitToApp";
+import { useTheme } from "@mui/material/styles";
 
-// Navigation items based on user role
-const getNavItems = (role?: string) => {
-  // Items visible to all authenticated users
-  const baseItems = [
-    { name: "Dashboard", href: "/dashboard" },
-    { name: "Projects", href: "/projects" },
-    { name: "Tasks", href: "/tasks" },
-  ];
+const drawerWidth = 280;
 
-  // Items for specific roles
-  const roleItems: Record<string, { name: string; href: string }[]> = {
-    super_admin: [
-      ...baseItems,
-      { name: "Users", href: "/users" },
-      { name: "Settings", href: "/settings" },
-      { name: "Analytics", href: "/analytics" },
-    ],
-    admin: [
-      ...baseItems,
-      { name: "Users", href: "/users" },
-      { name: "Settings", href: "/settings" },
-    ],
-    agent: [...baseItems, { name: "Clients", href: "/clients" }],
-    user: baseItems,
-  };
-
-  // Return appropriate items based on role, default to base items
-  return role && roleItems[role] ? roleItems[role] : baseItems;
-};
-
-// Main application router component
 export default function AppRouter() {
   const pathname = usePathname();
-  console.log("[AppRouter] MOUNT");
   const auth = useAuth() ?? {};
   const { user, loading, logout } = auth;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // If we're on the home page or auth pages, don't show this navigation
-  if (pathname === "/" || pathname?.startsWith("/auth")) {
-    return null;
-  }
+  if (pathname === "/" || pathname?.startsWith("/auth")) return null;
+  if (loading) return null;
+  if (!user) return null;
 
-  // Don't render nav until we've checked auth status
-  if (loading) {
-    return null;
-  }
+  const menuItems = [
+    { text: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
+    { text: "Companies", path: "/companies", icon: <PeopleIcon /> },
+    { text: "Deals", path: "/deals", icon: <BusinessIcon /> },
+    { text: "Reports", path: "/analytics", icon: <AssessmentIcon /> },
+    { text: "Settings", path: "/settings", icon: <SettingsIcon /> },
+  ];
 
-  // If no user and we're not on an auth page, we shouldn't be rendering this
-  if (!user) {
-    return null;
-  }
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
-  const navItems = getNavItems(user.role);
+  const drawer = (
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6" color="primary" fontWeight="bold">
+          SupaCRM
+        </Typography>
+      </Box>
+      <Divider />
+      <List sx={{ flexGrow: 1, px: 1 }}>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton
+              component={Link}
+              href={item.path}
+              selected={pathname === item.path}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            p: 2,
+            backgroundColor: "grey.50",
+            borderRadius: 2,
+            mb: 1,
+          }}
+        >
+          <Avatar
+            sx={{ width: 40, height: 40, mr: 2, bgcolor: "primary.main" }}
+          >
+            {user?.first_name?.[0] || user?.email?.[0]}
+          </Avatar>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography variant="subtitle2" noWrap>
+              {user?.full_name || user?.name || user?.email}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {user?.role || "User"}
+            </Typography>
+          </Box>
+        </Box>
+        <Button
+          fullWidth
+          variant="outlined"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={() => {
+            if (confirm("Are you sure you want to logout?")) logout();
+          }}
+        >
+          Logout
+        </Button>
+      </Box>
+    </Box>
+  );
 
   return (
-    <nav className="bg-white shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link
-                href="/dashboard"
-                className="text-xl font-bold text-blue-600"
-              >
-                SupaCRM
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`${
-                      isActive
-                        ? "border-blue-500 text-gray-900"
-                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                  >
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-          <div className="flex items-center">
-            <div className="hidden md:ml-4 md:flex-shrink-0 md:flex md:items-center">
-              <div className="relative ml-3">
-                <div className="flex items-center">
-                  <div className="mr-3">
-                    <p className="text-sm font-medium text-gray-700">
-                      {user.full_name || user.name || user.email}
-                    </p>
-                    <p className="text-xs text-gray-500 capitalize">
-                      {user.role || "User"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={logout}
-                    className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 text-sm rounded"
-                  >
-                    Log out
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <Box sx={{ display: "flex" }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { md: "none" } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            SupaCRM
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      {/* Mobile menu */}
-      <div className="sm:hidden">
-        <div className="pt-2 pb-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`${
-                  isActive
-                    ? "bg-blue-50 border-blue-500 text-blue-700"
-                    : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
-                } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
-              >
-                {item.name}
-              </Link>
-            );
-          })}
-          <div className="border-t border-gray-200 pt-4 pb-3">
-            <div className="flex items-center px-4">
-              <div className="flex-grow">
-                <div className="text-base font-medium text-gray-800">
-                  {user.full_name || user.name || user.email}
-                </div>
-                <div className="text-sm font-medium text-gray-500 capitalize">
-                  {user.role || "User"}
-                </div>
-              </div>
-              <button
-                onClick={logout}
-                className="ml-auto bg-red-500 hover:bg-red-600 text-white py-1 px-3 text-sm rounded"
-              >
-                Log out
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
+      <Box
+        component="nav"
+        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+      >
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+
+      {/* spacer for AppBar; layout will render children in <main> */}
+      <Box
+        component="div"
+        sx={{
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
+        }}
+      />
+    </Box>
   );
 }

@@ -9,7 +9,7 @@ function TasksPageContent() {
   const auth = useAuth() ?? {};
   const { user } = auth;
   // State for tasks list
-  type Task = { id: string; title: string; [key: string]: any };
+  type Task = { id: string; title: string; [key: string]: unknown };
   const [tasks, setTasks] = useState<Task[]>([]);
   // useForm hook for form state, validation, and error handling
   const form = useForm<{ title: string }>({ title: "" });

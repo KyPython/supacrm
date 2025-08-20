@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: any[]) => {
-  if (isDev) console.log(...args);
+const debug = (...args: unknown[]) => {
+  if (isDev) console.log(...(args as any[]));
 };
 
 function SignUpContent() {

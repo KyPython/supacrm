@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext.js";
 
 const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: any[]) => {
-  if (isDev) console.log(...args);
+const debug = (...args: unknown[]) => {
+  if (isDev) console.log(...(args as any[]));
 };
 
 function LoginForm() {
@@ -17,8 +17,8 @@ function LoginForm() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const router = useRouter();
   const { login, sendMagicLink } = useAuth() as {
-    login: (email: string, password: string) => Promise<any>;
-    sendMagicLink: (email: string) => Promise<any>;
+    login: (email: string, password: string) => Promise<unknown>;
+    sendMagicLink: (email: string) => Promise<unknown>;
   };
   // Check Supabase config
   const supabaseConfigMissing =
@@ -92,7 +92,7 @@ function LoginForm() {
             Check Your Email
           </h2>
           <p className="text-center text-gray-600 mb-4">
-            We've sent a magic link to {email}. Click the link to log in.
+            We&apos;ve sent a magic link to {email}. Click the link to log in.
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ function LoginForm() {
 
         <div className="text-center mt-4">
           <Link href="/signup" className="text-blue-500 hover:text-blue-700">
-            Don't have an account? Sign up
+            Don&apos;t have an account? Sign up
           </Link>
         </div>
       </div>

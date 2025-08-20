@@ -2,8 +2,8 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: any[]) => {
-  if (isDev) console.log(...args);
+const debug = (...args: unknown[]) => {
+  if (isDev) console.log(...(args as any[]));
 };
 
 export default function ForcedRedirect() {
@@ -16,7 +16,10 @@ export default function ForcedRedirect() {
 
     (async () => {
       try {
-        const client = (window as any).supabase;
+        const win = window as unknown as {
+          supabase?: import("@supabase/supabase-js").SupabaseClient | null;
+        };
+        const client = win.supabase ?? null;
         if (!client) {
           debug("[ForcedRedirect] no window.supabase, forcing /login");
           try {
@@ -27,9 +30,8 @@ export default function ForcedRedirect() {
           return;
         }
         // If client exists, try to get session; unauthenticated -> redirect
-        const {
-          data: { session },
-        } = await client.auth.getSession();
+        const getSessionResult = await client.auth?.getSession?.();
+        const session = getSessionResult?.data?.session ?? null;
         debug("[ForcedRedirect] session ->", session);
         if (!session) {
           try {

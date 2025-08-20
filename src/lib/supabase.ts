@@ -21,25 +21,25 @@ export const supabaseAdmin: SupabaseClient =
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       )
-    : (undefined as any);
+  : (null as unknown as SupabaseClient);
 
 // Ensure `window.supabase` exists (client-only). Provide explicit null when
 // env is missing so debugging checks in the browser are deterministic.
 if (typeof window !== 'undefined') {
   try {
-    if (!url || !key) {
+      if (!url || !key) {
       console.warn('[supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Setting window.supabase = null for clarity.');
-      (window as any).supabase = null;
+      (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else {
       // If supabase was created above, attach it; otherwise create a client now.
       if (!supabase) {
-        (window as any).supabase = createClient(url, key);
+        (window as unknown as { supabase: SupabaseClient | null }).supabase = createClient(url, key);
       } else {
-        (window as any).supabase = supabase;
+        (window as unknown as { supabase: SupabaseClient | null }).supabase = supabase;
       }
     }
   } catch (err) {
     console.error('[supabase] Error exposing client to window:', err);
-    (window as any).supabase = null;
+    (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
   }
 }

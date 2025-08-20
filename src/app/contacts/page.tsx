@@ -1,39 +1,46 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 import { supabase } from "@/lib/supabase";
 
 type Contact = {
-  id: any;
+  id: string | number;
   name: string;
   email: string;
 };
 
 export default function ContactsPage() {
   const auth = useAuth() ?? {};
-  const { user, loading, login, signUp, sendMagicLink, logout } = auth;
-  const [contacts, setContacts] = useState<any[]>([]);
+  // Intentionally not destructuring unused auth helpers here to avoid unused-var warnings
+  const { user } = auth;
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [contactsLoading, setContactsLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
+  const mountedRef = useRef(true);
 
-  async function fetchContacts() {
+  const fetchContacts = useCallback(async () => {
     setContactsLoading(true);
     setError("");
     if (!supabase) return;
     const { data, error } = await supabase.from("contacts").select("*");
-    if (!error) setContacts(data || []);
-    else setError(error.message);
+    if (!error && mountedRef.current) setContacts((data as Contact[]) || []);
+    else if (error) setError(error.message);
     setContactsLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchContacts();
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [fetchContacts]);
 
   async function addContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -65,7 +72,7 @@ export default function ContactsPage() {
     setContactsLoading(false);
   }
 
-  async function deleteContact(id: number) {
+  async function deleteContact(id: string | number) {
     setContactsLoading(true);
     setError("");
     if (!supabase) return;

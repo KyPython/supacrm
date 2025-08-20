@@ -3,11 +3,11 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: any[]) => {
-  if (isDev) console.log(...args);
+const debug = (...args: unknown[]) => {
+  if (isDev) console.log(...(args as unknown[]));
 };
-const debugWarn = (...args: any[]) => {
-  if (isDev) console.warn(...args);
+const debugWarn = (...args: unknown[]) => {
+  if (isDev) console.warn(...(args as unknown[]));
 };
 
 export default function AuthGate() {
@@ -20,10 +20,13 @@ export default function AuthGate() {
       try {
         debug("[AuthGate] checking session, pathname=", pathname);
         // Prefer the imported client, then window.supabase, else try to create one
-        let client: any = supabase;
+        let client = supabase as typeof supabase | null;
         if (!client && typeof window !== "undefined") {
-          if ((window as any).supabase) {
-            client = (window as any).supabase;
+          const win = window as unknown as {
+            supabase?: typeof supabase | null;
+          };
+          if (win.supabase) {
+            client = win.supabase as typeof supabase;
             debug("[AuthGate] using window.supabase (existing)");
           } else {
             // Try to create a client at runtime using NEXT_PUBLIC env vars inlined by Next
@@ -33,7 +36,10 @@ export default function AuthGate() {
               try {
                 const mod = await import("@supabase/supabase-js");
                 client = mod.createClient(url, key);
-                (window as any).supabase = client;
+                const win2 = window as unknown as {
+                  supabase?: typeof supabase | null;
+                };
+                win2.supabase = client as typeof supabase;
                 debug(
                   "[AuthGate] created window.supabase from NEXT_PUBLIC env vars"
                 );
@@ -42,13 +48,19 @@ export default function AuthGate() {
                   "[AuthGate] failed to dynamically create supabase client:",
                   e
                 );
-                (window as any).supabase = null;
+                const win3 = window as unknown as {
+                  supabase?: typeof supabase | null;
+                };
+                win3.supabase = null;
               }
             } else {
               debugWarn(
                 "[AuthGate] NEXT_PUBLIC_SUPABASE_URL/ANON_KEY missing; setting window.supabase = null"
               );
-              (window as any).supabase = null;
+              const win4 = window as unknown as {
+                supabase?: typeof supabase | null;
+              };
+              win4.supabase = null;
             }
           }
         }
