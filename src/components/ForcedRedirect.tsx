@@ -18,12 +18,13 @@ export default function ForcedRedirect() {
         };
         const client = win.supabase ?? null;
         if (!client) {
-          debug("[ForcedRedirect] no window.supabase, forcing /");
-          try {
-            window.location.replace("/");
-          } catch (e) {
-            debugError("[ForcedRedirect] replace failed", e);
-          }
+          // If there is no runtime Supabase client we cannot check session.
+          // Avoid redirecting to the same root path which can cause an
+          // infinite reload loop on hosts where NEXT_PUBLIC env vars are
+          // not provided. Just log and bail out.
+          debug(
+            "[ForcedRedirect] no window.supabase available; skipping redirect"
+          );
           return;
         }
         // If client exists, try to get session; unauthenticated -> redirect
