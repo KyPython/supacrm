@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!supabase) {
-      debugError('[AuthProvider] Supabase not configured');
+      debugError('[AuthProvider] Supabase not configured or invalid NEXT_PUBLIC_SUPABASE_URL');
       setLoading(false);
       setUser(null);
       return;
@@ -97,6 +97,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
+    if (!supabase) throw new Error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -108,6 +109,7 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async (email, password) => {
+    if (!supabase) throw new Error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
@@ -119,6 +121,7 @@ export function AuthProvider({ children }) {
   };
 
   const sendMagicLink = async (email) => {
+    if (!supabase) throw new Error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
     try {
       const { data, error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback` } });
       if (error) throw error;
