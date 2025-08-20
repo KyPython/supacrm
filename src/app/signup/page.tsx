@@ -4,6 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const isDev = process.env.NODE_ENV !== "production";
+const debug = (...args: any[]) => {
+  if (isDev) console.log(...args);
+};
+
 function SignUpContent() {
   // Check Supabase config
   const supabaseConfigMissing =
@@ -23,7 +28,30 @@ function SignUpContent() {
 
     try {
       await signUp(email, password);
-      router.push("/onboarding");
+      // Onboarding route not present in this project; redirect to dashboard instead
+      try {
+        router.push("/dashboard");
+      } catch (err) {
+        debug(
+          "[SignUp] router.push failed, will fallback to window.location.replace",
+          err
+        );
+      }
+      setTimeout(() => {
+        try {
+          if (
+            typeof window !== "undefined" &&
+            window.location.pathname !== "/dashboard"
+          ) {
+            debug(
+              "[SignUp] performing fallback window.location.replace to /dashboard"
+            );
+            window.location.replace("/dashboard");
+          }
+        } catch (e) {
+          console.error("[SignUp] fallback window.location.replace failed", e);
+        }
+      }, 0);
     } catch (error) {
       setError(error instanceof Error ? error.message : String(error));
     } finally {

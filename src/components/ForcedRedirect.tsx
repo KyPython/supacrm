@@ -1,6 +1,10 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+const isDev = process.env.NODE_ENV !== "production";
+const debug = (...args: any[]) => {
+  if (isDev) console.log(...args);
+};
 
 export default function ForcedRedirect() {
   const pathname = usePathname();
@@ -14,7 +18,7 @@ export default function ForcedRedirect() {
       try {
         const client = (window as any).supabase;
         if (!client) {
-          console.log("[ForcedRedirect] no window.supabase, forcing /login");
+          debug("[ForcedRedirect] no window.supabase, forcing /login");
           try {
             window.location.replace("/login");
           } catch (e) {
@@ -26,7 +30,7 @@ export default function ForcedRedirect() {
         const {
           data: { session },
         } = await client.auth.getSession();
-        console.log("[ForcedRedirect] session ->", session);
+        debug("[ForcedRedirect] session ->", session);
         if (!session) {
           try {
             window.location.replace("/login");

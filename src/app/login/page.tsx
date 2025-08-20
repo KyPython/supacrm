@@ -4,6 +4,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext.js";
 
+const isDev = process.env.NODE_ENV !== "production";
+const debug = (...args: any[]) => {
+  if (isDev) console.log(...args);
+};
+
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +34,35 @@ function LoginForm() {
 
     try {
       await login(email, password);
-      router.push("/");
+      // Prefer client navigation to dashboard. In some dev/server streaming
+      // scenarios Next's RSC router navigation can be blocked; schedule a
+      // short hard-redirect fallback to ensure the user lands on the app.
+      try {
+        router.push("/dashboard");
+      } catch (err) {
+        debug(
+          "[LoginPage] router.push failed, will fallback to window.location.replace",
+          err
+        );
+      }
+      setTimeout(() => {
+        try {
+          if (
+            typeof window !== "undefined" &&
+            window.location.pathname !== "/dashboard"
+          ) {
+            debug(
+              "[LoginPage] performing fallback window.location.replace to /dashboard"
+            );
+            window.location.replace("/dashboard");
+          }
+        } catch (e) {
+          console.error(
+            "[LoginPage] fallback window.location.replace failed",
+            e
+          );
+        }
+      }, 0);
     } catch (error) {
       setError(error instanceof Error ? error.message : String(error));
     } finally {
