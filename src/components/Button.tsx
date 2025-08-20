@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { IconType } from "react-icons";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -58,7 +59,32 @@ export default function Button({
   const iconRight = renderIcon(rightIcon);
 
   if (href) {
-    // anchor-style button
+    const isInternal = href.startsWith("/");
+    const sharedProps = {
+      "aria-label": ariaLabel,
+      className: `${base} ${disabledClass} ${className}`.trim(),
+      style,
+    } as any;
+
+    if (isInternal) {
+      // Use Next.js Link for client-side navigation on internal routes
+      const { onClick, target, rel } = props as any;
+      return (
+        <Link
+          href={href}
+          {...sharedProps}
+          onClick={onClick}
+          target={target}
+          rel={rel}
+        >
+          {iconLeft}
+          <span>{children}</span>
+          {iconRight}
+        </Link>
+      );
+    }
+
+    // external link - keep anchor behavior
     return (
       <a
         aria-label={ariaLabel}
