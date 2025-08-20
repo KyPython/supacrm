@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
-import Home from "@/app/home/page";
+import Landing from "@/app/home/Landing";
 import BusinessIcon from "@mui/icons-material/Business";
 import PeopleIcon from "@mui/icons-material/People";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -213,7 +213,7 @@ export default function Page() {
   }
 
   if (loading) return <div className="p-6">Checking authentication...</div>;
-  if (!user) return <Home />;
+  if (!user) return <Landing />;
 
   return (
     <div className="flex min-h-screen">
