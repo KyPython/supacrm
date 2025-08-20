@@ -41,16 +41,20 @@ function isValidPublicSupabaseUrl(u?: string | null) {
 }
 
 if (!url || !key) {
-  console.error("Supabase API key or URL is missing. Check your .env.local file.");
-} else if (!isValidPublicSupabaseUrl(url)) {
-  console.error(
-    "NEXT_PUBLIC_SUPABASE_URL looks invalid or contains credentials. Use the public project URL (https://<project>.supabase.co) without user:pass@ in it."
-  );
+  console.warn("Supabase API key or URL is missing. Check your .env.local file.");
 } else {
-  supabase = createClient(url, key);
-  // Expose the client on window for easy debugging in the browser console
-  // We still defer the actual `window` assignment to the client runtime below,
-  // but createClient runs here so server code can use `supabase` too.
+  try {
+    // Try to create the client with the sanitized URL. If the sanitized URL
+    // is malformed this will throw and we will handle it below.
+    supabase = createClient(url, key);
+  } catch (err) {
+    // Log a single clear error; do not spam multiple warnings elsewhere.
+    console.error(
+      "Failed to create Supabase client from NEXT_PUBLIC_SUPABASE_URL. Check the URL format (https://<project>.supabase.co) and ensure it does not include credentials.",
+      err
+    );
+    supabase = null;
+  }
 }
 export { supabase };
 
@@ -72,28 +76,23 @@ if (typeof window !== 'undefined') {
         '[supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Setting window.supabase = null for clarity.'
       );
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
-    } else if (!isValidPublicSupabaseUrl(url)) {
+    } else if (!supabase) {
+      // If we failed to create the client above, surface a single warning and
+      // avoid attempting to create it again here (prevents duplicate errors).
       console.warn(
-        '[supabase] NEXT_PUBLIC_SUPABASE_URL appears invalid or contains credentials; setting window.supabase = null to avoid runtime errors.'
+        '[supabase] Supabase client not available at runtime; check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
       );
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else {
-      // If supabase was created above, attach it; otherwise create a client now.
+      // Client exists; attach it and emit a masked host diagnostic once.
       try {
-        // Masked runtime diagnostic: only log the host portion so we can
-        // confirm which public endpoint the client is using without leaking
-        // secrets.
         const host = new URL(url as string).host;
         // eslint-disable-next-line no-console
         console.warn('[supabase] runtime public host=', host);
       } catch (e) {
         // ignore
       }
-      if (!supabase) {
-        (window as unknown as { supabase: SupabaseClient | null }).supabase = createClient(url, key);
-      } else {
-        (window as unknown as { supabase: SupabaseClient | null }).supabase = supabase;
-      }
+      (window as unknown as { supabase: SupabaseClient | null }).supabase = supabase;
     }
   } catch (err) {
     console.error('[supabase] Error exposing client to window:', err);
