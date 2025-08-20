@@ -40,6 +40,17 @@
   }
 }
 
+/* Respect explicit theme toggles set on the html element via data-theme="dark" */
+html[data-theme="dark"] {
+  --bg: #071526;
+  --fg: #e6eef3;
+  --muted: #9aa6b2;
+  --brand: #22d3ee;
+  --brand-10: rgba(34,211,238,0.08);
+  --surface: #04101a;
+  --card: #06202a;
+}
+
 /* Base visual rhythm and font */
 html, body, #__next {
   height: 100%;
