@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext.js";
 import { debug, debugError } from "@/lib/debug";
+import Container from "@/components/Container";
+import Card from "@/components/Card";
+import Button from "@/components/Button";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -79,28 +82,24 @@ function LoginForm() {
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-center text-2xl font-bold mb-6">
-            Check Your Email
-          </h2>
-          <p className="text-center text-gray-600 mb-4">
+      <Container>
+        <Card>
+          <h2 className="h2 center">Check Your Email</h2>
+          <p className="muted center">
             We&apos;ve sent a magic link to {email}. Click the link to log in.
           </p>
-        </div>
-      </div>
+        </Card>
+      </Container>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-center text-2xl font-bold mb-6">
-          Log in to SupaCRM
-        </h2>
+    <Container>
+      <Card>
+        <h2 className="h2 center">Log in to SupaCRM</h2>
 
         {supabaseConfigMissing && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 alert alert-danger">
             Supabase API key or URL is missing. Please check your .env.local
             file.
           </div>
@@ -122,7 +121,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="form-input w-full"
               required
             />
           </div>
@@ -136,39 +135,41 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="form-input w-full"
               required
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading || supabaseConfigMissing}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+            variant="primary"
+            className="w-full"
           >
             {loading ? "Logging in..." : "Log in"}
-          </button>
+          </Button>
         </form>
 
         <div className="text-center mb-4">
           <span className="text-gray-500">or</span>
         </div>
 
-        <button
+        <Button
           onClick={handleMagicLinkLogin}
           disabled={loading || supabaseConfigMissing}
-          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded mb-4"
+          variant="secondary"
+          className="w-full mb-4"
         >
           {loading ? "Sending..." : "Login with Magic Link"}
-        </button>
+        </Button>
 
         <div className="text-center mt-4">
-          <Link href="/signup" className="text-blue-500 hover:text-blue-700">
+          <Link href="/signup" className="text-brand hover:text-brand-dark">
             Don&apos;t have an account? Sign up
           </Link>
         </div>
-      </div>
-    </div>
+      </Card>
+    </Container>
   );
 }
 

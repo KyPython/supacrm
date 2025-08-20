@@ -3,11 +3,12 @@ import React from "react";
 export default function Card({
   children,
   className = "",
+  variant = "surface",
 }: {
   children: React.ReactNode;
   className?: string;
+  variant?: "surface" | "transparent";
 }) {
-  return (
-    <div className={`card ${className}`.trim()}>{children}</div>
-  );
+  const extra = variant === "transparent" ? "bg-transparent shadow-none" : "";
+  return <div className={`card ${extra} ${className}`.trim()}>{children}</div>;
 }

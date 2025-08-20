@@ -4,6 +4,9 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import type { FileObject } from "@supabase/storage-js";
 import { supabase } from "../../lib/supabase";
+import Container from "@/components/Container";
+import Card from "@/components/Card";
+import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
@@ -95,54 +98,55 @@ export default function FileUploadPage() {
   }
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">File Upload</h1>
-      {/* Error and success banners */}
-      <ErrorBanner error={generalError || form.errors.file} />
-      <SuccessBanner message={form.success} />
-      {/* File upload form */}
-      <form onSubmit={handleUpload} className="mb-6 flex gap-2 items-center">
-        <input
-          type="file"
-          name="file"
-          onChange={handleFileChange}
-          className={`border px-3 py-2 rounded w-full ${
-            form.errors.file ? "border-red-400" : ""
-          }`}
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-5 py-2 rounded shadow"
-          disabled={form.loading}
-        >
-          Upload
-        </button>
-      </form>
-      <button
-        onClick={fetchFiles}
-        className="mb-4 bg-gray-200 px-3 py-2 rounded shadow"
-      >
-        Refresh Files
-      </button>
-      {/* Files list */}
-      {form.loading && <p>Loading...</p>}
-      <ul className="divide-y">
-        {files.map((f) => (
-          <li
-            key={(f as FileObject).name}
-            className="flex justify-between items-center py-3"
+    <Container>
+      <Card>
+        <h1 className="h1">File Upload</h1>
+        {/* Error and success banners */}
+        <ErrorBanner error={generalError || form.errors.file} />
+        <SuccessBanner message={form.success} />
+        {/* File upload form */}
+        <form onSubmit={handleUpload} className="mb-6 flex gap-2 items-center">
+          <input
+            type="file"
+            name="file"
+            onChange={handleFileChange}
+            className={`form-input w-full ${
+              form.errors.file ? "border-red-400" : ""
+            }`}
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            className="px-5"
+            disabled={form.loading}
           >
-            <span className="font-medium">{(f as FileObject).name}</span>
-            <button
-              onClick={() => handleDownload((f as FileObject).name)}
-              className="text-blue-500 hover:underline"
-              disabled={form.loading}
+            Upload
+          </Button>
+        </form>
+        <Button onClick={fetchFiles} variant="secondary" className="mb-4">
+          Refresh Files
+        </Button>
+        {/* Files list */}
+        {form.loading && <p>Loading...</p>}
+        <ul className="divide-y">
+          {files.map((f) => (
+            <li
+              key={(f as FileObject).name}
+              className="flex justify-between items-center py-3"
             >
-              Download
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+              <span className="font-medium">{(f as FileObject).name}</span>
+              <button
+                onClick={() => handleDownload((f as FileObject).name)}
+                style={{ color: "var(--brand)" }}
+                className="hover:underline"
+                disabled={form.loading}
+              >
+                Download
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </Container>
   );
 }

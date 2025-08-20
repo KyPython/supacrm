@@ -109,18 +109,14 @@ export default function ContactsPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Name"
-            className={`border px-3 py-2 rounded w-full ${
-              error ? "border-red-400" : ""
-            }`}
+            className={`form-input w-full ${error ? "border-red-400" : ""}`}
           />
           <input
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
-            className={`border px-3 py-2 rounded w-full ${
-              error ? "border-red-400" : ""
-            }`}
+            className={`form-input w-full ${error ? "border-red-400" : ""}`}
           />
           <button
             type="submit"

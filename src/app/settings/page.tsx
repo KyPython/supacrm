@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext.js";
 import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
+import Button from "@/components/Button";
 
 export default function SettingsPage() {
   const { user } = useAuth() ?? {};
@@ -301,7 +302,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setProfile((p) => ({ ...p, firstName: e.target.value }))
                       }
-                      className="mt-1 block w-full border rounded px-3 py-2"
+                      className="mt-1 block w-full form-input"
                     />
                   </div>
                   <div>
@@ -313,7 +314,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setProfile((p) => ({ ...p, lastName: e.target.value }))
                       }
-                      className="mt-1 block w-full border rounded px-3 py-2"
+                      className="mt-1 block w-full form-input"
                     />
                   </div>
                 </div>
@@ -323,18 +324,20 @@ export default function SettingsPage() {
                   <input
                     value={profile.email}
                     disabled
-                    className="mt-1 block w-full border rounded px-3 py-2 bg-gray-50"
+                    className="mt-1 block w-full form-input"
+                    style={{ background: "#f3f4f6" }}
                   />
                 </div>
 
                 <div>
-                  <button
+                  <Button
                     type="submit"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
+                    className="inline-flex"
                     disabled={saving}
+                    variant="primary"
                   >
                     {saving ? "Saving..." : "Save Profile"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
@@ -372,13 +375,13 @@ export default function SettingsPage() {
                   <span>Weekly reports</span>
                 </label>
                 <div>
-                  <button
+                  <Button
                     onClick={saveNotifications}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
                     disabled={saving}
+                    variant="primary"
                   >
                     {saving ? "Saving..." : "Save Notifications"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -398,7 +401,7 @@ export default function SettingsPage() {
                           sessionTimeout: Number(e.target.value),
                         }))
                       }
-                      className="mt-1 block w-full border rounded px-3 py-2"
+                      className="mt-1 block w-full form-input"
                     >
                       <option value={15}>15</option>
                       <option value={30}>30</option>
@@ -418,7 +421,7 @@ export default function SettingsPage() {
                           passwordExpiry: Number(e.target.value),
                         }))
                       }
-                      className="mt-1 block w-full border rounded px-3 py-2"
+                      className="mt-1 block w-full form-input"
                     >
                       <option value={30}>30</option>
                       <option value={60}>60</option>
@@ -427,13 +430,13 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div>
-                  <button
+                  <Button
                     onClick={saveSecurity}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
                     disabled={saving}
+                    variant="primary"
                   >
                     {saving ? "Saving..." : "Save Security"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

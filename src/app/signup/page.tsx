@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { debug, debugError } from "@/lib/debug";
+import Container from "@/components/Container";
+import Card from "@/components/Card";
+import Button from "@/components/Button";
 
 function SignUpContent() {
   // Check Supabase config
@@ -56,24 +59,18 @@ function SignUpContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-center text-2xl font-bold mb-6">
-          Create an account
-        </h2>
+    <Container>
+      <Card>
+        <h2 className="h2 center">Create an account</h2>
 
         {supabaseConfigMissing && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 alert alert-danger">
             Supabase API key or URL is missing. Please check your .env.local
             file.
           </div>
         )}
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -85,7 +82,7 @@ function SignUpContent() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="form-input w-full"
               required
             />
           </div>
@@ -99,19 +96,20 @@ function SignUpContent() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="form-input w-full"
               required
               minLength={6}
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading || supabaseConfigMissing}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+            variant="primary"
+            className="w-full"
           >
             {loading ? "Creating account..." : "Sign up"}
-          </button>
+          </Button>
         </form>
 
         <div className="text-center mt-4">
@@ -119,8 +117,8 @@ function SignUpContent() {
             Already have an account? Log in
           </Link>
         </div>
-      </div>
-    </div>
+      </Card>
+    </Container>
   );
 }
 

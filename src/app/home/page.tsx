@@ -1,22 +1,27 @@
 import Link from "next/link";
+import Container from "@/components/Container";
+import Card from "@/components/Card";
+import Button from "@/components/Button";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="bg-white shadow">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <header style={{ background: "var(--card)" }} className="shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">SupaCRM</h1>
+            <h1 className="h1">SupaCRM</h1>
             <div>
               <Link
                 href="/auth/login"
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mr-2"
+                style={{ background: "var(--brand)", color: "var(--fg)" }}
+                className="py-2 px-4 rounded mr-2"
               >
                 Log in
               </Link>
               <Link
                 href="/auth/signup"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded"
+                style={{ background: "var(--card)", color: "var(--fg)" }}
+                className="py-2 px-4 rounded"
               >
                 Sign up
               </Link>
@@ -30,7 +35,7 @@ export default function Home() {
           <div className="text-center">
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
               <span className="block">Secure Multi-Role SaaS</span>
-              <span className="block text-blue-600">
+              <span className="block" style={{ color: "var(--brand)" }}>
                 Built with Next.js & Supabase
               </span>
             </h1>
@@ -41,8 +46,11 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-5xl mx-auto">
               {/* Feature 1 */}
-              <div className="p-6 bg-white rounded-lg shadow-md">
-                <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center bg-blue-100 rounded-lg">
+              <Card className="p-6">
+                <div
+                  className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"
+                  style={{ background: "var(--brand-20)", borderRadius: 8 }}
+                >
                   <img
                     src="/globe.svg"
                     alt="Role-based security"
@@ -50,27 +58,33 @@ export default function Home() {
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Role-Based Security</h3>
-                <p className="text-gray-600">
+                <p className="text-muted">
                   Granular permissions with Supabase RLS for admins, agents, and
                   users
                 </p>
-              </div>
+              </Card>
 
               {/* Feature 2 */}
-              <div className="p-6 bg-white rounded-lg shadow-md">
-                <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center bg-blue-100 rounded-lg">
+              <Card className="p-6">
+                <div
+                  className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"
+                  style={{ background: "var(--brand-20)", borderRadius: 8 }}
+                >
                   <img src="/file.svg" alt="File storage" className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Secure File Storage</h3>
-                <p className="text-gray-600">
+                <p className="text-muted">
                   Upload, manage, and share files with role-based access
                   controls
                 </p>
-              </div>
+              </Card>
 
               {/* Feature 3 */}
-              <div className="p-6 bg-white rounded-lg shadow-md">
-                <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center bg-blue-100 rounded-lg">
+              <Card className="p-6">
+                <div
+                  className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"
+                  style={{ background: "var(--brand-20)", borderRadius: 8 }}
+                >
                   <img
                     src="/window.svg"
                     alt="Cross-platform"
@@ -78,39 +92,42 @@ export default function Home() {
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Cross-Platform</h3>
-                <p className="text-gray-600">
+                <p className="text-muted">
                   Works seamlessly across all devices, including Windows
                   authentication fixes
                 </p>
-              </div>
+              </Card>
             </div>
 
             <div className="mt-10 max-w-md mx-auto sm:flex sm:justify-center md:mt-16">
               <div className="rounded-md shadow">
-                <Link
+                <Button
                   href="/auth/signup"
-                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
+                  variant="primary"
+                  className="w-full flex items-center justify-center px-8 py-3 md:py-4 md:text-lg md:px-10"
+                  leftIcon={undefined}
                 >
                   Get started
-                </Link>
+                </Button>
               </div>
               <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-                <Link
+                <Button
                   href="/auth/login"
-                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                  variant="secondary"
+                  className="w-full flex items-center justify-center px-8 py-3 md:py-4 md:text-lg md:px-10"
                 >
                   Log in
-                </Link>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      <footer className="bg-gray-50 mt-16">
+      <footer style={{ background: "var(--card)" }} className="mt-16">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500">
-            SupaCRM — Secure Multi-Role SaaS with React + Supabase
+          <p className="text-center text-muted">
+            SupaCRM  Secure Multi-Role SaaS with React + Supabase
           </p>
         </div>
       </footer>

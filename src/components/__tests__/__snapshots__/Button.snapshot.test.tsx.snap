@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Button snapshot 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md"
+  >
+    <span>
+      Snapshot
+    </span>
+  </button>
+</div>
+`;

@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import Container from "@/components/Container";
+import Card from "@/components/Card";
+import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
@@ -80,57 +83,61 @@ function DealsPageContent() {
   }
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Deals</h1>
-      <ErrorBanner
-        error={form.errors.title || form.errors.amount || generalError}
-      />
-      <SuccessBanner message={form.success} />
-      <form onSubmit={addDeal} className="mb-6 flex gap-2 items-center">
-        <input
-          name="title"
-          value={form.values.title}
-          onChange={form.handleChange}
-          placeholder="Title"
-          className={`border px-3 py-2 rounded w-full ${
-            form.errors.title ? "border-red-400" : ""
-          }`}
+    <Container>
+      <Card>
+        <h1 className="h1">Deals</h1>
+        <ErrorBanner
+          error={form.errors.title || form.errors.amount || generalError}
         />
-        <input
-          name="amount"
-          value={form.values.amount}
-          onChange={form.handleChange}
-          placeholder="Amount"
-          className={`border px-3 py-2 rounded w-full ${
-            form.errors.amount ? "border-red-400" : ""
-          }`}
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-5 py-2 rounded shadow"
-          disabled={form.loading}
-        >
-          Add
-        </button>
-      </form>
-      {form.loading && <p>Loading...</p>}
-      <ul className="divide-y">
-        {deals.map((d) => (
-          <li key={d.id} className="flex justify-between items-center py-3">
-            <span className="font-medium">
-              {d.title} (${d.amount})
-            </span>
-            <button
-              onClick={() => deleteDeal(d.id)}
-              className="text-red-500 hover:underline"
-              disabled={form.loading}
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+        <SuccessBanner message={form.success} />
+        <form onSubmit={addDeal} className="mb-6 flex gap-2 items-center">
+          <input
+            name="title"
+            value={form.values.title}
+            onChange={form.handleChange}
+            placeholder="Title"
+            className={`form-input w-full ${
+              form.errors.title ? "border-red-400" : ""
+            }`}
+          />
+          <input
+            name="amount"
+            value={form.values.amount}
+            onChange={form.handleChange}
+            placeholder="Amount"
+            className={`form-input w-full ${
+              form.errors.amount ? "border-red-400" : ""
+            }`}
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            className="px-5"
+            disabled={form.loading}
+          >
+            Add
+          </Button>
+        </form>
+        {form.loading && <p>Loading...</p>}
+        <ul className="divide-y">
+          {deals.map((d) => (
+            <li key={d.id} className="flex justify-between items-center py-3">
+              <span className="font-medium">
+                {d.title} (${d.amount})
+              </span>
+              <button
+                onClick={() => deleteDeal(d.id)}
+                style={{ color: "var(--brand)" }}
+                className="hover:underline"
+                disabled={form.loading}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </Container>
   );
 }
 
