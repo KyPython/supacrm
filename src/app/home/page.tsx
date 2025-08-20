@@ -33,13 +33,19 @@ export default function Home() {
       <main>
         <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+            <h1
+              style={{ color: "var(--fg)" }}
+              className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl"
+            >
               <span className="block">Secure Multi-Role SaaS</span>
               <span className="block" style={{ color: "var(--brand)" }}>
                 Built with Next.js & Supabase
               </span>
             </h1>
-            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+            <p
+              style={{ color: "var(--muted)" }}
+              className="mt-3 max-w-md mx-auto text-base sm:text-lg md:mt-5 md:text-xl md:max-w-3xl"
+            >
               A powerful CRM solution with advanced role-based security, storage
               management, and intuitive dashboard.
             </p>
@@ -56,20 +62,20 @@ export default function Home() {
                     alt="Role-based security"
                     className="w-6 h-6"
                   />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Role-Based Security</h3>
-                <p className="text-muted">
-                  Granular permissions with Supabase RLS for admins, agents, and
-                  users
-                </p>
-              </Card>
-
-              {/* Feature 2 */}
-              <Card className="p-6">
-                <div
-                  className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"
-                  style={{ background: "var(--brand-20)", borderRadius: 8 }}
-                >
+                  <Link
+                    href="/login"
+                    style={{ background: "var(--brand)", color: "var(--fg)" }}
+                    className="py-2 px-4 rounded mr-2"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    style={{ background: "var(--card)", color: "var(--fg)" }}
+                    className="py-2 px-4 rounded"
+                  >
+                    Sign up
+                  </Link>
                   <img src="/file.svg" alt="File storage" className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Secure File Storage</h3>
@@ -102,7 +108,7 @@ export default function Home() {
             <div className="mt-10 max-w-md mx-auto sm:flex sm:justify-center md:mt-16">
               <div className="rounded-md shadow">
                 <Button
-                  href="/auth/signup"
+                  href="/signup"
                   variant="primary"
                   className="w-full flex items-center justify-center px-8 py-3 md:py-4 md:text-lg md:px-10"
                   leftIcon={undefined}
