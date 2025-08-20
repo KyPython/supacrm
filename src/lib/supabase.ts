@@ -2,8 +2,30 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let supabase: SupabaseClient | null = null;
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+function sanitizeUrl(u?: string | null) {
+  if (!u) return u ?? null;
+  // Trim surrounding whitespace and remove BOM / zero-width characters
+  const cleaned = String(u).trim().replace(/^[\uFEFF\u200B]+|[\uFEFF\u200B]+$/g, "");
+  // Also remove any remaining zero-width spaces inside the string
+  let s = cleaned.replace(/\u200B|\u200C|\u200D|\uFEFF/g, "");
+  // If someone accidentally provided credentials (user:pass@) in the URL,
+  // strip that portion: https://user:pass@host -> https://host and warn.
+  const userinfoRegex = /^([a-z0-9+.-]+:\/\/)(?:[^@\/]+@)(.*)/i;
+  const m = s.match(userinfoRegex);
+  if (m) {
+    try {
+      // eslint-disable-next-line no-console
+      console.warn('[supabase] NEXT_PUBLIC_SUPABASE_URL contained credentials; credentials removed for safety.');
+    } catch (e) {}
+    s = m[1] + m[2];
+  }
+  return s;
+}
+
+const url = sanitizeUrl(rawUrl);
 
 function isValidPublicSupabaseUrl(u?: string | null) {
   if (!u) return false;
