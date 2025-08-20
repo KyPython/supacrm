@@ -23,14 +23,24 @@ import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import BusinessIcon from "@mui/icons-material/Business";
-import AssessmentIcon from "@mui/icons-material/Assessment";
+import FolderIcon from "@mui/icons-material/Folder";
+import TaskIcon from "@mui/icons-material/Task";
+import ContactsIcon from "@mui/icons-material/Contacts";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/ExitToApp";
 import { useTheme } from "@mui/material/styles";
 
 const drawerWidth = 280;
+// Brand colors for SupaCRM (distinct from SalesBase)
+const BRAND = {
+  primary: "#0ea5a4", // teal
+  surface: "#071826", // deep navy
+  accent: "#7dd3fc",
+};
 
-export default function AppRouter() {
+import type { ReactNode } from "react";
+
+export default function AppRouter({ children }: { children?: ReactNode }) {
   const pathname = usePathname();
   const auth = useAuth() ?? {};
   const { user, loading, logout } = auth;
@@ -38,24 +48,45 @@ export default function AppRouter() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (pathname === "/" || pathname?.startsWith("/auth")) return null;
+  // Don't render the router on auth-related routes, but show it on the root
+  // so users can reach Settings and other pages from the default landing page.
+  if (pathname?.startsWith("/auth")) return null;
   if (loading) return null;
   if (!user) return null;
 
   const menuItems = [
     { text: "Dashboard", path: "/dashboard", icon: <DashboardIcon /> },
     { text: "Companies", path: "/companies", icon: <PeopleIcon /> },
+    { text: "Contacts", path: "/contacts", icon: <ContactsIcon /> },
     { text: "Deals", path: "/deals", icon: <BusinessIcon /> },
-    { text: "Reports", path: "/analytics", icon: <AssessmentIcon /> },
+    { text: "Files", path: "/files", icon: <FolderIcon /> },
+    { text: "Tasks", path: "/tasks", icon: <TaskIcon /> },
     { text: "Settings", path: "/settings", icon: <SettingsIcon /> },
   ];
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
   const drawer = (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <Box sx={{ p: 3, textAlign: "center" }}>
-        <Typography variant="h6" color="primary" fontWeight="bold">
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: BRAND.surface,
+        color: "#fff",
+      }}
+    >
+      <Box
+        sx={{
+          p: 3,
+          textAlign: "center",
+          borderBottom: `1px solid rgba(255,255,255,0.04)`,
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{ color: BRAND.primary, fontWeight: "bold" }}
+        >
           SupaCRM
         </Typography>
       </Box>
@@ -81,29 +112,31 @@ export default function AppRouter() {
             display: "flex",
             alignItems: "center",
             p: 2,
-            backgroundColor: "grey.50",
+            backgroundColor: "rgba(255,255,255,0.02)",
             borderRadius: 2,
             mb: 1,
           }}
         >
-          <Avatar
-            sx={{ width: 40, height: 40, mr: 2, bgcolor: "primary.main" }}
-          >
+          <Avatar sx={{ width: 40, height: 40, mr: 2, bgcolor: BRAND.primary }}>
             {user?.first_name?.[0] || user?.email?.[0]}
           </Avatar>
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" noWrap>
-              {user?.full_name || user?.name || user?.email}
+            <Typography variant="subtitle2" noWrap sx={{ color: "#fff" }}>
+              {String(user?.full_name || user?.name || user?.email || "")}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {user?.role || "User"}
+            <Typography
+              variant="caption"
+              sx={{ color: "rgba(255,255,255,0.7)" }}
+              noWrap
+            >
+              {String(user?.role || "User")}
             </Typography>
           </Box>
         </Box>
         <Button
           fullWidth
           variant="outlined"
-          color="error"
+          sx={{ borderColor: "rgba(255,255,255,0.06)", color: "#fff" }}
           startIcon={<LogoutIcon />}
           onClick={() => {
             if (confirm("Are you sure you want to logout?")) logout();
@@ -122,6 +155,8 @@ export default function AppRouter() {
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
+          backgroundColor: BRAND.primary,
+          color: "#042022",
         }}
       >
         <Toolbar>
@@ -165,6 +200,8 @@ export default function AppRouter() {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              backgroundColor: BRAND.surface,
+              color: "#fff",
             },
           }}
           open
@@ -173,14 +210,19 @@ export default function AppRouter() {
         </Drawer>
       </Box>
 
-      {/* spacer for AppBar; layout will render children in <main> */}
+      {/* main content area that accounts for AppBar height and Drawer width */}
       <Box
-        component="div"
+        component="main"
         sx={{
+          flexGrow: 1,
+          p: 3,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
+          mt: { xs: "56px", md: "64px" },
         }}
-      />
+      >
+        {children}
+      </Box>
     </Box>
   );
 }

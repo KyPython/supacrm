@@ -11,8 +11,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <AuthGate />
           <ForcedRedirect />
-          <AppRouter />
-          <main>{children}</main>
+          <AppRouter>{children}</AppRouter>
         </AuthProvider>
       </body>
     </html>

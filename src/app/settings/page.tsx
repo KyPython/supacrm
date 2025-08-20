@@ -3,9 +3,27 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext.js";
 import { supabase } from "@/lib/supabase";
+import { useSearchParams } from "next/navigation";
 
 export default function SettingsPage() {
   const { user } = useAuth() ?? {};
+  const searchParams = useSearchParams?.();
+  const debug = !!searchParams?.get?.("__debug");
+  // in debug mode expose a fake user so UI renders without auth; saves use localStorage
+  const debugUser: {
+    id: string;
+    email: string;
+    first_name: string;
+    full_name: string;
+  } | null = debug
+    ? {
+        id: "debug-user",
+        email: "debug@example.com",
+        first_name: "Debug",
+        full_name: "Debug User",
+      }
+    : null;
+  const effectiveUser = (user as any) ?? debugUser;
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,7 +46,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const init = async () => {
-      if (!user) {
+      if (!effectiveUser) {
         setLoading(false);
         return;
       }
@@ -41,17 +59,52 @@ export default function SettingsPage() {
 
       // seed profile fields from `profiles` (AuthProvider already merged profile into user)
       setProfile({
-        firstName: user.first_name || user.firstName || "",
-        lastName: user.last_name || user.lastName || "",
-        email: user.email || "",
+        firstName:
+          (effectiveUser &&
+            (effectiveUser.first_name || (effectiveUser as any).firstName)) ||
+          "",
+        lastName:
+          (effectiveUser &&
+            (effectiveUser.last_name || (effectiveUser as any).lastName)) ||
+          "",
+        email: (effectiveUser && ((effectiveUser as any).email || "")) || "",
       });
 
       try {
-        const { data, error: fetchErr } = await supabase
-          .from("user_settings")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+        if (debug) {
+          // load from localStorage in debug mode
+          const raw = localStorage.getItem("settings_debug");
+          const parsed = raw ? JSON.parse(raw) : null;
+          if (parsed?.notifications) {
+            setNotifications(parsed.notifications);
+          }
+          if (parsed?.security) {
+            setSecurity(parsed.security);
+          }
+        } else {
+          const res = await supabase
+            .from("user_settings")
+            .select("*")
+            .eq("id", effectiveUser.id)
+            .single();
+          const data = (res as any)?.data ?? null;
+          const fetchErr = (res as any)?.error ?? null;
+          if (fetchErr && fetchErr.code !== "PGRST116") {
+            // PGRST116 = No rows found for single() in some Supabase versions; ignore
+            console.warn("Failed to fetch user settings (ignored)", fetchErr);
+          }
+          if (data) {
+            setNotifications({
+              email: data.email_notifications ?? true,
+              sms: data.sms_notifications ?? false,
+              weekly: data.weekly_reports ?? false,
+            });
+            setSecurity({
+              sessionTimeout: data.session_timeout ?? 30,
+              passwordExpiry: data.password_expiry ?? 90,
+            });
+          }
+        }
         if (fetchErr && fetchErr.code !== "PGRST116") {
           // PGRST116 = No rows found for single() in some Supabase versions; ignore
           console.warn("Failed to fetch user settings (ignored)", fetchErr);
@@ -75,22 +128,34 @@ export default function SettingsPage() {
     };
 
     init();
-  }, [user]);
+  }, [user, searchParams]);
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return setError("Not authenticated");
+    if (!effectiveUser) return setError("Not authenticated");
     setSaving(true);
     setError("");
     try {
-      if (!supabase) throw new Error("Supabase client not available");
-      const { error: updErr } = await supabase
-        .from("profiles")
-        .update({ first_name: profile.firstName, last_name: profile.lastName })
-        .eq("id", user.id);
-      if (updErr) throw updErr;
-      // update local user fields (UI only)
-      console.info("Profile saved");
+      if (debug) {
+        // save to localStorage in debug mode
+        const saved = JSON.parse(
+          localStorage.getItem("settings_debug") || "{}"
+        );
+        saved.profile = profile;
+        localStorage.setItem("settings_debug", JSON.stringify(saved));
+        console.info("Profile saved (debug)");
+      } else {
+        if (!supabase) throw new Error("Supabase client not available");
+        const { error: updErr } = await supabase
+          .from("user_profiles")
+          .update({
+            first_name: profile.firstName,
+            last_name: profile.lastName,
+          })
+          .eq("id", (effectiveUser as any).id);
+        if (updErr) throw updErr;
+        console.info("Profile saved");
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to save profile");
@@ -100,23 +165,32 @@ export default function SettingsPage() {
   };
 
   const saveNotifications = async () => {
-    if (!user) return setError("Not authenticated");
+    if (!effectiveUser) return setError("Not authenticated");
     setSaving(true);
     setError("");
     try {
-      if (!supabase) throw new Error("Supabase client not available");
-      const payload = {
-        id: user.id,
-        email_notifications: notifications.email,
-        sms_notifications: notifications.sms,
-        weekly_reports: notifications.weekly,
-      };
-      // upsert with onConflict to ensure id is used for conflict resolution
-      const { error: upsertErr } = await supabase
-        .from("user_settings")
-        .upsert([payload], { onConflict: "id" });
-      if (upsertErr) throw upsertErr;
-      console.info("Notifications saved");
+      if (debug) {
+        const saved = JSON.parse(
+          localStorage.getItem("settings_debug") || "{}"
+        );
+        saved.notifications = notifications;
+        localStorage.setItem("settings_debug", JSON.stringify(saved));
+        console.info("Notifications saved (debug)");
+      } else {
+        if (!supabase) throw new Error("Supabase client not available");
+        const payload = {
+          id: (effectiveUser as any).id,
+          email_notifications: notifications.email,
+          sms_notifications: notifications.sms,
+          weekly_reports: notifications.weekly,
+        };
+        // upsert with onConflict to ensure id is used for conflict resolution
+        const { error: upsertErr } = await supabase
+          .from("user_settings")
+          .upsert([payload], { onConflict: "id" });
+        if (upsertErr) throw upsertErr;
+        console.info("Notifications saved");
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to save notifications");
@@ -126,21 +200,30 @@ export default function SettingsPage() {
   };
 
   const saveSecurity = async () => {
-    if (!user) return setError("Not authenticated");
+    if (!effectiveUser) return setError("Not authenticated");
     setSaving(true);
     setError("");
     try {
-      if (!supabase) throw new Error("Supabase client not available");
-      const payload = {
-        id: user.id,
-        session_timeout: security.sessionTimeout,
-        password_expiry: security.passwordExpiry,
-      };
-      const { error: upsertErr } = await supabase
-        .from("user_settings")
-        .upsert([payload], { onConflict: "id" });
-      if (upsertErr) throw upsertErr;
-      console.info("Security saved");
+      if (debug) {
+        const saved = JSON.parse(
+          localStorage.getItem("settings_debug") || "{}"
+        );
+        saved.security = security;
+        localStorage.setItem("settings_debug", JSON.stringify(saved));
+        console.info("Security saved (debug)");
+      } else {
+        if (!supabase) throw new Error("Supabase client not available");
+        const payload = {
+          id: (effectiveUser as any).id,
+          session_timeout: security.sessionTimeout,
+          password_expiry: security.passwordExpiry,
+        };
+        const { error: upsertErr } = await supabase
+          .from("user_settings")
+          .upsert([payload], { onConflict: "id" });
+        if (upsertErr) throw upsertErr;
+        console.info("Security saved");
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to save security settings");

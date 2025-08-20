@@ -155,3 +155,15 @@ CREATE TABLE public.activity_logs (
 );
 
 -- Create indexes and triggers (see full schema above)
+
+-- User settings (per-user preferences)
+CREATE TABLE IF NOT EXISTS public.user_settings (
+    id UUID PRIMARY KEY REFERENCES public.user_profiles(id) ON DELETE CASCADE,
+    email_notifications BOOLEAN DEFAULT true,
+    sms_notifications BOOLEAN DEFAULT false,
+    weekly_reports BOOLEAN DEFAULT false,
+    session_timeout INTEGER DEFAULT 30, -- minutes
+    password_expiry INTEGER DEFAULT 90, -- days
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

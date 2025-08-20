@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext.js";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 function Dashboard() {
@@ -84,6 +85,57 @@ function Dashboard() {
     <div className="flex min-h-screen">
       <nav className="w-64 bg-white shadow-lg h-screen p-6 flex flex-col gap-4">
         <h2 className="text-2xl font-bold mb-6">SupaCRM</h2>
+        <ul className="flex flex-col gap-2">
+          <li>
+            <Link
+              href="/dashboard"
+              className="block py-2 px-3 rounded hover:bg-gray-100"
+            >
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/companies"
+              className="block py-2 px-3 rounded hover:bg-gray-100"
+            >
+              Companies
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/contacts"
+              className="block py-2 px-3 rounded hover:bg-gray-100"
+            >
+              Contacts
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/deals"
+              className="block py-2 px-3 rounded hover:bg-gray-100"
+            >
+              Deals
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/tasks"
+              className="block py-2 px-3 rounded hover:bg-gray-100"
+            >
+              Tasks
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/settings"
+              className="block py-2 px-3 rounded hover:bg-gray-100"
+            >
+              Settings
+            </Link>
+          </li>
+        </ul>
+
         <button
           onClick={logout}
           className="mt-auto bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
@@ -99,7 +151,7 @@ function Dashboard() {
           <p className="mb-4">
             Role:{" "}
             <span className="font-semibold">
-              {user?.role || "Not assigned"}
+              {String(user?.role || "Not assigned")}
             </span>
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-6">
