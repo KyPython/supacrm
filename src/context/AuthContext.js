@@ -1,13 +1,12 @@
 "use client";
 import { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../lib/supabase';
+import { debug, debugWarn, debugError } from '@/lib/debug';
 import { useRouter, usePathname } from 'next/navigation';
 
 const AuthContext = createContext(null);
 
-const isDev = process.env.NODE_ENV !== 'production';
-const debug = (...args) => { if (isDev) console.log(...args); };
-const debugWarn = (...args) => { if (isDev) console.warn(...args); };
+// debug helpers imported from src/lib/debug
 
 export function AuthProvider({ children }) {
   debug('[AuthProvider] render');
@@ -29,10 +28,10 @@ export function AuthProvider({ children }) {
       debug('[AuthProvider] redirect-check', { loading, user, pathname, isAuthPage });
       if (!isAuthPage) {
         try {
-          router.replace('/login');
+          router.replace('/');
         } catch (err) {
           debugWarn('[AuthProvider] router.replace failed, falling back to window.location.replace', err);
-          try { window.location.replace('/login'); } catch(e) { /* ignore */ }
+          try { window.location.replace('/'); } catch(e) { /* ignore */ }
         }
       }
     }
@@ -40,7 +39,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!supabase) {
-      console.error('[AuthProvider] Supabase not configured');
+      debugError('[AuthProvider] Supabase not configured');
       setLoading(false);
       setUser(null);
       return;
@@ -57,13 +56,13 @@ export function AuthProvider({ children }) {
 
           const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/signup') || pathname?.startsWith('/auth');
           if (isAuthPage && typeof window !== 'undefined') {
-            try { window.location.href = '/dashboard'; return; } catch (e) { console.error('[AuthProvider] initial redirect failed', e); }
+            try { window.location.href = '/dashboard'; return; } catch (e) { debugError('[AuthProvider] initial redirect failed', e); }
           }
         } else {
           setUser(null);
         }
       } catch (err) {
-        console.error('[AuthProvider] getInitialSession error', err);
+        debugError('[AuthProvider] getInitialSession error', err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -81,13 +80,13 @@ export function AuthProvider({ children }) {
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 
           if (event === 'SIGNED_IN' && typeof window !== 'undefined') {
-            try { window.location.href = '/dashboard'; return; } catch (e) { console.error('[AuthProvider] SIGNED_IN redirect failed', e); }
+            try { window.location.href = '/dashboard'; return; } catch (e) { debugError('[AuthProvider] SIGNED_IN redirect failed', e); }
           }
         } else {
           setUser(null);
         }
       } catch (err) {
-        console.error('[AuthProvider] onAuthStateChange handler error', err);
+        debugError('[AuthProvider] onAuthStateChange handler error', err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -134,7 +133,7 @@ export function AuthProvider({ children }) {
     try {
       await supabase.auth.signOut();
     } finally {
-      try { router.replace('/login'); } catch(e) { if (typeof window !== 'undefined') window.location.href = '/login'; }
+      try { router.replace('/'); } catch(e) { if (typeof window !== 'undefined') window.location.href = '/'; }
     }
   };
 

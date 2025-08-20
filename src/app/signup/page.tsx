@@ -3,11 +3,7 @@ import { useAuth } from "@/context/AuthContext.js";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: unknown[]) => {
-  if (isDev) console.log(...(args as any[]));
-};
+import { debug, debugError } from "@/lib/debug";
 
 function SignUpContent() {
   // Check Supabase config
@@ -49,7 +45,7 @@ function SignUpContent() {
             window.location.replace("/dashboard");
           }
         } catch (e) {
-          console.error("[SignUp] fallback window.location.replace failed", e);
+          debugError("[SignUp] fallback window.location.replace failed", e);
         }
       }, 0);
     } catch (error) {

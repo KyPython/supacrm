@@ -2,13 +2,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: unknown[]) => {
-  if (isDev) console.log(...(args as unknown[]));
-};
-const debugWarn = (...args: unknown[]) => {
-  if (isDev) console.warn(...(args as unknown[]));
-};
+import { debug, debugWarn, debugError } from "@/lib/debug";
 
 export default function AuthGate() {
   const router = useRouter();
@@ -74,19 +68,19 @@ export default function AuthGate() {
           debug("[AuthGate] no supabase client available");
           if (!isAuthPage) {
             debug(
-              "[AuthGate] no client and not on auth page \u2014 forcing redirect to /login"
+              "[AuthGate] no client and not on auth page — forcing redirect to /"
             );
             try {
-              router.replace("/login");
+              router.replace("/");
             } catch (err) {
               debugWarn(
                 "[AuthGate] router.replace failed, falling back to window.location.replace",
                 err
               );
               try {
-                window.location.replace("/login");
+                window.location.replace("/");
               } catch (e) {
-                console.error("[AuthGate] window.location.replace failed", e);
+                debugError("[AuthGate] window.location.replace failed", e);
               }
             }
           }
@@ -99,18 +93,18 @@ export default function AuthGate() {
         debug("[AuthGate] session", session);
         if (!mounted) return;
         if (!session && !isAuthPage) {
-          debug("[AuthGate] no session, redirecting to /login");
+          debug("[AuthGate] no session, redirecting to /");
           try {
-            router.replace("/login");
+            router.replace("/");
           } catch (err) {
             debugWarn(
               "[AuthGate] router.replace failed, falling back to window.location.replace",
               err
             );
             try {
-              window.location.replace("/login");
+              window.location.replace("/");
             } catch (e) {
-              console.error("[AuthGate] window.location.replace failed", e);
+              debugError("[AuthGate] window.location.replace failed", e);
             }
           }
         }

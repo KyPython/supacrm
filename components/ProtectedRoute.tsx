@@ -12,7 +12,10 @@ export default function ProtectedRoute({
   children,
   allowedRoles = [],
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth() as {
+    user: { role: string } | null;
+    loading: boolean;
+  };
   const router = useRouter();
 
   useEffect(() => {
@@ -21,7 +24,7 @@ export default function ProtectedRoute({
     } else if (
       user &&
       allowedRoles.length > 0 &&
-      !allowedRoles.includes(user.role)
+      !allowedRoles.includes(String(user.role))
     ) {
       router.push("/unauthorized");
     }
@@ -31,7 +34,7 @@ export default function ProtectedRoute({
     return <div>Loading...</div>;
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+  if (allowedRoles.length > 0 && !allowedRoles.includes(String(user.role))) {
     return null;
   }
 

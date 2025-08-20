@@ -3,6 +3,8 @@ import AuthGate from "@/components/AuthGate";
 import ForcedRedirect from "@/components/ForcedRedirect";
 import AppRouter from "@/app/router";
 import type { ReactNode } from "react";
+import "@/styles/ui.css";
+import "@/app/globals.css";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

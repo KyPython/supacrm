@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 
 export default function SettingsPage() {
   const { user } = useAuth() ?? {};
-  const searchParams = useSearchParams?.();
+  const searchParams = useSearchParams();
   const debug = !!searchParams?.get?.("__debug");
   // in debug mode expose a fake user so UI renders without auth; saves use localStorage
   const debugUser: {
@@ -52,7 +52,11 @@ export default function SettingsPage() {
       }
 
       if (!supabase) {
-        console.error("Supabase client not available");
+        // record an analytics event for missing client and bail
+        // (do not throw; keep UX unaffected)
+        try {
+          (await import("@/lib/analytics")).track("supabase_client_missing");
+        } catch {}
         setLoading(false);
         return;
       }
@@ -71,8 +75,10 @@ export default function SettingsPage() {
       });
 
       try {
+        // load from localStorage in debug mode
+        let data: any = null;
+        let fetchErr: any = null;
         if (debug) {
-          // load from localStorage in debug mode
           const raw = localStorage.getItem("settings_debug");
           const parsed = raw ? JSON.parse(raw) : null;
           if (parsed?.notifications) {
@@ -87,27 +93,18 @@ export default function SettingsPage() {
             .select("*")
             .eq("id", effectiveUser.id)
             .single();
-          const data = (res as any)?.data ?? null;
-          const fetchErr = (res as any)?.error ?? null;
-          if (fetchErr && fetchErr.code !== "PGRST116") {
-            // PGRST116 = No rows found for single() in some Supabase versions; ignore
-            console.warn("Failed to fetch user settings (ignored)", fetchErr);
-          }
-          if (data) {
-            setNotifications({
-              email: data.email_notifications ?? true,
-              sms: data.sms_notifications ?? false,
-              weekly: data.weekly_reports ?? false,
-            });
-            setSecurity({
-              sessionTimeout: data.session_timeout ?? 30,
-              passwordExpiry: data.password_expiry ?? 90,
-            });
-          }
+          data = (res as any)?.data ?? null;
+          fetchErr = (res as any)?.error ?? null;
         }
+
         if (fetchErr && fetchErr.code !== "PGRST116") {
           // PGRST116 = No rows found for single() in some Supabase versions; ignore
-          console.warn("Failed to fetch user settings (ignored)", fetchErr);
+          try {
+            (await import("@/lib/analytics")).track(
+              "user_settings_fetch_failed",
+              { error: String(fetchErr) }
+            );
+          } catch {}
         }
         if (data) {
           setNotifications({
@@ -121,7 +118,11 @@ export default function SettingsPage() {
           });
         }
       } catch (err) {
-        console.error("Error loading user settings:", err);
+        try {
+          (await import("@/lib/analytics")).track("user_settings_load_error", {
+            error: String(err),
+          });
+        } catch {}
       } finally {
         setLoading(false);
       }
@@ -143,7 +144,11 @@ export default function SettingsPage() {
         );
         saved.profile = profile;
         localStorage.setItem("settings_debug", JSON.stringify(saved));
-        console.info("Profile saved (debug)");
+        try {
+          (await import("@/lib/analytics")).track(
+            "settings_profile_saved_debug"
+          );
+        } catch {}
       } else {
         if (!supabase) throw new Error("Supabase client not available");
         const { error: updErr } = await supabase
@@ -154,7 +159,9 @@ export default function SettingsPage() {
           })
           .eq("id", (effectiveUser as any).id);
         if (updErr) throw updErr;
-        console.info("Profile saved");
+        try {
+          (await import("@/lib/analytics")).track("settings_profile_saved");
+        } catch {}
       }
     } catch (err) {
       console.error(err);
@@ -175,21 +182,41 @@ export default function SettingsPage() {
         );
         saved.notifications = notifications;
         localStorage.setItem("settings_debug", JSON.stringify(saved));
-        console.info("Notifications saved (debug)");
+        try {
+          (await import("@/lib/analytics")).track(
+            "settings_notifications_saved_debug"
+          );
+        } catch {}
       } else {
         if (!supabase) throw new Error("Supabase client not available");
+        const id = (effectiveUser as any).id;
         const payload = {
-          id: (effectiveUser as any).id,
+          id,
           email_notifications: notifications.email,
           sms_notifications: notifications.sms,
           weekly_reports: notifications.weekly,
         };
-        // upsert with onConflict to ensure id is used for conflict resolution
+        // Try upsert; if server returns a conflict (409) try update as a fallback
         const { error: upsertErr } = await supabase
           .from("user_settings")
-          .upsert([payload], { onConflict: "id" });
-        if (upsertErr) throw upsertErr;
-        console.info("Notifications saved");
+          .upsert(payload, { onConflict: "id" });
+        if (upsertErr) {
+          // fallback to update when upsert isn't accepted
+          if ((upsertErr as any)?.status === 409) {
+            const { error: updErr } = await supabase
+              .from("user_settings")
+              .update(payload)
+              .eq("id", id);
+            if (updErr) throw updErr;
+          } else {
+            throw upsertErr;
+          }
+        }
+        try {
+          (await import("@/lib/analytics")).track(
+            "settings_notifications_saved"
+          );
+        } catch {}
       }
     } catch (err) {
       console.error(err);
@@ -210,19 +237,36 @@ export default function SettingsPage() {
         );
         saved.security = security;
         localStorage.setItem("settings_debug", JSON.stringify(saved));
-        console.info("Security saved (debug)");
+        try {
+          (await import("@/lib/analytics")).track(
+            "settings_security_saved_debug"
+          );
+        } catch {}
       } else {
         if (!supabase) throw new Error("Supabase client not available");
+        const id = (effectiveUser as any).id;
         const payload = {
-          id: (effectiveUser as any).id,
+          id,
           session_timeout: security.sessionTimeout,
           password_expiry: security.passwordExpiry,
         };
         const { error: upsertErr } = await supabase
           .from("user_settings")
-          .upsert([payload], { onConflict: "id" });
-        if (upsertErr) throw upsertErr;
-        console.info("Security saved");
+          .upsert(payload, { onConflict: "id" });
+        if (upsertErr) {
+          if ((upsertErr as any)?.status === 409) {
+            const { error: updErr } = await supabase
+              .from("user_settings")
+              .update(payload)
+              .eq("id", id);
+            if (updErr) throw updErr;
+          } else {
+            throw upsertErr;
+          }
+        }
+        try {
+          (await import("@/lib/analytics")).track("settings_security_saved");
+        } catch {}
       }
     } catch (err) {
       console.error(err);
@@ -235,15 +279,16 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading settings...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Settings</h1>
-      </div>
+    <div className="app-container spaced">
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="h2">Settings</h1>
+        </div>
 
-      {error && <div className="text-red-600 mb-3">{error}</div>}
+        {error && <div className="text-red-600 mb-3">{error}</div>}
 
-      <div className="border rounded bg-white shadow-sm">
-        <div className="border-b px-4 py-3">
+        <div className="border rounded bg-white shadow-sm">
+          <div className="border-b px-4 py-3">
           <nav className="flex space-x-4">
             <button
               className={`py-2 px-3 ${

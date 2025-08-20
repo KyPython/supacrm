@@ -3,11 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext.js";
-
-const isDev = process.env.NODE_ENV !== "production";
-const debug = (...args: unknown[]) => {
-  if (isDev) console.log(...(args as any[]));
-};
+import { debug, debugError } from "@/lib/debug";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -57,10 +53,7 @@ function LoginForm() {
             window.location.replace("/dashboard");
           }
         } catch (e) {
-          console.error(
-            "[LoginPage] fallback window.location.replace failed",
-            e
-          );
+          debugError("[LoginPage] fallback window.location.replace failed", e);
         }
       }, 0);
     } catch (error) {

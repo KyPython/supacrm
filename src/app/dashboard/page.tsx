@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
 function DashboardContent() {
@@ -55,22 +56,37 @@ function DashboardContent() {
         <p>Loading...</p>
       ) : (
         <div className="grid grid-cols-2 gap-6">
-          <div className="bg-blue-100 p-4 rounded shadow">
+          <Link
+            href="/companies"
+            className="bg-blue-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+          >
             <h2 className="text-xl font-semibold">Companies</h2>
             <p className="text-2xl">{counts.companies}</p>
-          </div>
-          <div className="bg-green-100 p-4 rounded shadow">
+          </Link>
+
+          <Link
+            href="/contacts"
+            className="bg-green-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+          >
             <h2 className="text-xl font-semibold">Contacts</h2>
             <p className="text-2xl">{counts.contacts}</p>
-          </div>
-          <div className="bg-yellow-100 p-4 rounded shadow">
+          </Link>
+
+          <Link
+            href="/deals"
+            className="bg-yellow-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+          >
             <h2 className="text-xl font-semibold">Deals</h2>
             <p className="text-2xl">{counts.deals}</p>
-          </div>
-          <div className="bg-purple-100 p-4 rounded shadow">
+          </Link>
+
+          <Link
+            href="/tasks"
+            className="bg-purple-100 p-4 rounded shadow block hover:shadow-md transition-shadow cursor-pointer"
+          >
             <h2 className="text-xl font-semibold">Tasks</h2>
             <p className="text-2xl">{counts.tasks}</p>
-          </div>
+          </Link>
         </div>
       )}
     </div>
