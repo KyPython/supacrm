@@ -9,13 +9,8 @@ export default function SettingsPage() {
   const { user } = useAuth() ?? {};
   const searchParams = useSearchParams();
   const debug = !!searchParams?.get?.("__debug");
-  // in debug mode expose a fake user so UI renders without auth; saves use localStorage
-  const debugUser: {
-    id: string;
-    email: string;
-    first_name: string;
-    full_name: string;
-  } | null = debug
+
+  const debugUser = debug
     ? {
         id: "debug-user",
         email: "debug@example.com",
@@ -24,6 +19,7 @@ export default function SettingsPage() {
       }
     : null;
   const effectiveUser = (user as any) ?? debugUser;
+
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,22 +42,14 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const init = async () => {
-      if (!effectiveUser) {
-        setLoading(false);
-        return;
-      }
-
+      if (!effectiveUser) return setLoading(false);
       if (!supabase) {
-        // record an analytics event for missing client and bail
-        // (do not throw; keep UX unaffected)
         try {
           (await import("@/lib/analytics")).track("supabase_client_missing");
         } catch {}
-        setLoading(false);
-        return;
+        return setLoading(false);
       }
 
-      // seed profile fields from `profiles` (AuthProvider already merged profile into user)
       setProfile({
         firstName:
           (effectiveUser &&
@@ -75,47 +63,38 @@ export default function SettingsPage() {
       });
 
       try {
-        // load from localStorage in debug mode
-        let data: any = null;
-        let fetchErr: any = null;
         if (debug) {
           const raw = localStorage.getItem("settings_debug");
           const parsed = raw ? JSON.parse(raw) : null;
-          if (parsed?.notifications) {
-            setNotifications(parsed.notifications);
-          }
-          if (parsed?.security) {
-            setSecurity(parsed.security);
-          }
+          if (parsed?.notifications) setNotifications(parsed.notifications);
+          if (parsed?.security) setSecurity(parsed.security);
         } else {
           const res = await supabase
             .from("user_settings")
             .select("*")
             .eq("id", effectiveUser.id)
             .single();
-          data = (res as any)?.data ?? null;
-          fetchErr = (res as any)?.error ?? null;
-        }
-
-        if (fetchErr && fetchErr.code !== "PGRST116") {
-          // PGRST116 = No rows found for single() in some Supabase versions; ignore
-          try {
-            (await import("@/lib/analytics")).track(
-              "user_settings_fetch_failed",
-              { error: String(fetchErr) }
-            );
-          } catch {}
-        }
-        if (data) {
-          setNotifications({
-            email: data.email_notifications ?? true,
-            sms: data.sms_notifications ?? false,
-            weekly: data.weekly_reports ?? false,
-          });
-          setSecurity({
-            sessionTimeout: data.session_timeout ?? 30,
-            passwordExpiry: data.password_expiry ?? 90,
-          });
+          const data = (res as any)?.data ?? null;
+          const fetchErr = (res as any)?.error ?? null;
+          if (fetchErr && fetchErr.code !== "PGRST116") {
+            try {
+              (await import("@/lib/analytics")).track(
+                "user_settings_fetch_failed",
+                { error: String(fetchErr) }
+              );
+            } catch {}
+          }
+          if (data) {
+            setNotifications({
+              email: data.email_notifications ?? true,
+              sms: data.sms_notifications ?? false,
+              weekly: data.weekly_reports ?? false,
+            });
+            setSecurity({
+              sessionTimeout: data.session_timeout ?? 30,
+              passwordExpiry: data.password_expiry ?? 90,
+            });
+          }
         }
       } catch (err) {
         try {
@@ -127,7 +106,6 @@ export default function SettingsPage() {
         setLoading(false);
       }
     };
-
     init();
   }, [user, searchParams]);
 
@@ -138,7 +116,6 @@ export default function SettingsPage() {
     setError("");
     try {
       if (debug) {
-        // save to localStorage in debug mode
         const saved = JSON.parse(
           localStorage.getItem("settings_debug") || "{}"
         );
@@ -196,21 +173,17 @@ export default function SettingsPage() {
           sms_notifications: notifications.sms,
           weekly_reports: notifications.weekly,
         };
-        // Try upsert; if server returns a conflict (409) try update as a fallback
         const { error: upsertErr } = await supabase
           .from("user_settings")
           .upsert(payload, { onConflict: "id" });
         if (upsertErr) {
-          // fallback to update when upsert isn't accepted
           if ((upsertErr as any)?.status === 409) {
             const { error: updErr } = await supabase
               .from("user_settings")
               .update(payload)
               .eq("id", id);
             if (updErr) throw updErr;
-          } else {
-            throw upsertErr;
-          }
+          } else throw upsertErr;
         }
         try {
           (await import("@/lib/analytics")).track(
@@ -260,9 +233,7 @@ export default function SettingsPage() {
               .update(payload)
               .eq("id", id);
             if (updErr) throw updErr;
-          } else {
-            throw upsertErr;
-          }
+          } else throw upsertErr;
         }
         try {
           (await import("@/lib/analytics")).track("settings_security_saved");
@@ -289,183 +260,184 @@ export default function SettingsPage() {
 
         <div className="border rounded bg-white shadow-sm">
           <div className="border-b px-4 py-3">
-          <nav className="flex space-x-4">
-            <button
-              className={`py-2 px-3 ${
-                activeTab === 0 ? "border-b-2 border-blue-500" : ""
-              }`}
-              onClick={() => setActiveTab(0)}
-            >
-              Profile
-            </button>
-            <button
-              className={`py-2 px-3 ${
-                activeTab === 1 ? "border-b-2 border-blue-500" : ""
-              }`}
-              onClick={() => setActiveTab(1)}
-            >
-              Notifications
-            </button>
-            <button
-              className={`py-2 px-3 ${
-                activeTab === 2 ? "border-b-2 border-blue-500" : ""
-              }`}
-              onClick={() => setActiveTab(2)}
-            >
-              Security
-            </button>
-          </nav>
-        </div>
+            <nav className="flex space-x-4">
+              <button
+                className={`py-2 px-3 ${
+                  activeTab === 0 ? "border-b-2 border-blue-500" : ""
+                }`}
+                onClick={() => setActiveTab(0)}
+              >
+                Profile
+              </button>
+              <button
+                className={`py-2 px-3 ${
+                  activeTab === 1 ? "border-b-2 border-blue-500" : ""
+                }`}
+                onClick={() => setActiveTab(1)}
+              >
+                Notifications
+              </button>
+              <button
+                className={`py-2 px-3 ${
+                  activeTab === 2 ? "border-b-2 border-blue-500" : ""
+                }`}
+                onClick={() => setActiveTab(2)}
+              >
+                Security
+              </button>
+            </nav>
+          </div>
 
-        <div className="p-4">
-          {activeTab === 0 && (
-            <form onSubmit={saveProfile} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4">
+            {activeTab === 0 && (
+              <form onSubmit={saveProfile} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium">
+                      First name
+                    </label>
+                    <input
+                      value={profile.firstName}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, firstName: e.target.value }))
+                      }
+                      className="mt-1 block w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Last name
+                    </label>
+                    <input
+                      value={profile.lastName}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, lastName: e.target.value }))
+                      }
+                      className="mt-1 block w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium">
-                    First name
-                  </label>
+                  <label className="block text-sm font-medium">Email</label>
                   <input
-                    value={profile.firstName}
-                    onChange={(e) =>
-                      setProfile((p) => ({ ...p, firstName: e.target.value }))
-                    }
-                    className="mt-1 block w-full border rounded px-3 py-2"
+                    value={profile.email}
+                    disabled
+                    className="mt-1 block w-full border rounded px-3 py-2 bg-gray-50"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium">Last name</label>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save Profile"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {activeTab === 1 && (
+              <div className="space-y-4">
+                <label className="flex items-center space-x-3">
                   <input
-                    value={profile.lastName}
-                    onChange={(e) =>
-                      setProfile((p) => ({ ...p, lastName: e.target.value }))
+                    type="checkbox"
+                    checked={notifications.email}
+                    onChange={() =>
+                      setNotifications((n) => ({ ...n, email: !n.email }))
                     }
-                    className="mt-1 block w-full border rounded px-3 py-2"
                   />
+                  <span>Email notifications</span>
+                </label>
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={notifications.sms}
+                    onChange={() =>
+                      setNotifications((n) => ({ ...n, sms: !n.sms }))
+                    }
+                  />
+                  <span>SMS notifications</span>
+                </label>
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={notifications.weekly}
+                    onChange={() =>
+                      setNotifications((n) => ({ ...n, weekly: !n.weekly }))
+                    }
+                  />
+                  <span>Weekly reports</span>
+                </label>
+                <div>
+                  <button
+                    onClick={saveNotifications}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save Notifications"}
+                  </button>
                 </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium">Email</label>
-                <input
-                  value={profile.email}
-                  disabled
-                  className="mt-1 block w-full border rounded px-3 py-2 bg-gray-50"
-                />
-              </div>
-
-              <div>
-                <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save Profile"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {activeTab === 1 && (
-            <div className="space-y-4">
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={notifications.email}
-                  onChange={() =>
-                    setNotifications((n) => ({ ...n, email: !n.email }))
-                  }
-                />
-                <span>Email notifications</span>
-              </label>
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={notifications.sms}
-                  onChange={() =>
-                    setNotifications((n) => ({ ...n, sms: !n.sms }))
-                  }
-                />
-                <span>SMS notifications</span>
-              </label>
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={notifications.weekly}
-                  onChange={() =>
-                    setNotifications((n) => ({ ...n, weekly: !n.weekly }))
-                  }
-                />
-                <span>Weekly reports</span>
-              </label>
-
-              <div>
-                <button
-                  onClick={saveNotifications}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save Notifications"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 2 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium">
-                    Session timeout (minutes)
-                  </label>
-                  <select
-                    value={security.sessionTimeout}
-                    onChange={(e) =>
-                      setSecurity((s) => ({
-                        ...s,
-                        sessionTimeout: Number(e.target.value),
-                      }))
-                    }
-                    className="mt-1 block w-full border rounded px-3 py-2"
-                  >
-                    <option value={15}>15</option>
-                    <option value={30}>30</option>
-                    <option value={60}>60</option>
-                    <option value={120}>120</option>
-                  </select>
+            {activeTab === 2 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Session timeout (minutes)
+                    </label>
+                    <select
+                      value={security.sessionTimeout}
+                      onChange={(e) =>
+                        setSecurity((s) => ({
+                          ...s,
+                          sessionTimeout: Number(e.target.value),
+                        }))
+                      }
+                      className="mt-1 block w-full border rounded px-3 py-2"
+                    >
+                      <option value={15}>15</option>
+                      <option value={30}>30</option>
+                      <option value={60}>60</option>
+                      <option value={120}>120</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Password expiry (days)
+                    </label>
+                    <select
+                      value={security.passwordExpiry}
+                      onChange={(e) =>
+                        setSecurity((s) => ({
+                          ...s,
+                          passwordExpiry: Number(e.target.value),
+                        }))
+                      }
+                      className="mt-1 block w-full border rounded px-3 py-2"
+                    >
+                      <option value={30}>30</option>
+                      <option value={60}>60</option>
+                      <option value={90}>90</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">
-                    Password expiry (days)
-                  </label>
-                  <select
-                    value={security.passwordExpiry}
-                    onChange={(e) =>
-                      setSecurity((s) => ({
-                        ...s,
-                        passwordExpiry: Number(e.target.value),
-                      }))
-                    }
-                    className="mt-1 block w-full border rounded px-3 py-2"
+                  <button
+                    onClick={saveSecurity}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
+                    disabled={saving}
                   >
-                    <option value={30}>30</option>
-                    <option value={60}>60</option>
-                    <option value={90}>90</option>
-                  </select>
+                    {saving ? "Saving..." : "Save Security"}
+                  </button>
                 </div>
               </div>
-
-              <div>
-                <button
-                  onClick={saveSecurity}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded"
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save Security"}
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

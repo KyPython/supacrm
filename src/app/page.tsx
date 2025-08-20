@@ -98,7 +98,6 @@ export default function Page() {
     track("create_contact_attempt", {});
     try {
       if (!supabase) throw new Error("No supabase");
-      // split full name into first_name / last_name (DB requires last_name NOT NULL)
       const parts = (contactForm.name || "").trim().split(/\s+/);
       const first_name = parts.shift() || "";
       const last_name = parts.join(" ") || "";
@@ -138,7 +137,6 @@ export default function Page() {
     setUploadProgress(2);
 
     try {
-      // Request a signed upload URL from our server-side endpoint
       const signRes = await fetch("/api/uploads/sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,7 +148,6 @@ export default function Page() {
       const signedUrl: string = signJson.signedUrl;
       const key = signJson.path;
 
-      // Upload using XHR to get progress events
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", signedUrl);
@@ -166,18 +163,14 @@ export default function Page() {
         xhr.onload = async () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
-              // write metadata to DB
               if (!supabase) throw new Error("No supabase");
-              // attempt to derive a public URL if bucket is public
               let publicUrl: string | null = null;
               try {
                 const pub = await (supabase as any).storage
                   .from("uploads")
                   .getPublicUrl(key);
                 publicUrl = pub?.data?.publicUrl ?? pub?.publicURL ?? null;
-              } catch (e) {
-                // ignore — bucket may be private or getPublicUrl not available
-              }
+              } catch (e) {}
 
               const { error: metaErr } = await supabase.from("files").insert({
                 name: selectedFile.name,
@@ -188,8 +181,6 @@ export default function Page() {
                 file_path: key,
                 file_size: selectedFile.size,
                 mime_type: selectedFile.type || "application/octet-stream",
-                // store public url when available to make client links easier
-                // keep null when not available
                 public_url: publicUrl,
               });
               if (metaErr) throw metaErr;
@@ -289,232 +280,229 @@ export default function Page() {
       <main className="flex-1 p-10">
         <div className="app-container">
           <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                Welcome, {user?.first_name || user?.email || "User"}!
-              </h1>
-              <p className="mb-4">
-                Role:{" "}
-                <span className="font-semibold">
-                  {String(user?.role || "Not assigned")}
-                </span>
-              </p>
-            </div>
-            <div>
-              <button
-                className="inline-flex items-center gap-2 px-3 py-2 bg-teal-500 text-white rounded"
-                onClick={() => {
-                  setShowNewContact(true);
-                }}
-              >
-                <AddIcon fontSize="small" /> New Contact
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mt-6">
-            <Link
-              href="/companies"
-              className="bg-blue-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
-            >
-              <h3 className="font-semibold text-lg">
-                <BusinessIcon className="inline-block mr-2 text-teal-600" />{" "}
-                Companies
-              </h3>
-              <p className="text-2xl font-bold text-blue-700">
-                {stats.companies}
-              </p>
-              <div className="mt-2 text-sm text-blue-600">View companies →</div>
-            </Link>
-
-            <div className="bg-green-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-lg">
-                <PeopleIcon className="inline-block mr-2 text-green-600" />{" "}
-                Contacts
-              </h3>
-              <p className="text-2xl font-bold text-green-700">
-                {stats.contacts}
-              </p>
-              <div className="mt-2 flex justify-center gap-3">
-                <Link href="/contacts" className="text-sm text-green-600">
-                  View →
-                </Link>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">
+                  Welcome, {user?.first_name || user?.email || "User"}!
+                </h1>
+                <p className="mb-4">
+                  Role:{" "}
+                  <span className="font-semibold">
+                    {String(user?.role || "Not assigned")}
+                  </span>
+                </p>
+              </div>
+              <div>
                 <button
-                  className="text-sm text-white bg-green-600 px-2 py-1 rounded"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-teal-500 text-white rounded"
                   onClick={() => setShowNewContact(true)}
                 >
-                  New contact
+                  <AddIcon fontSize="small" /> New Contact
                 </button>
               </div>
             </div>
 
-            <Link
-              href="/deals"
-              className="bg-yellow-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
-            >
-              <h3 className="font-semibold text-lg">
-                <LocalOfferIcon className="inline-block mr-2 text-yellow-600" />{" "}
-                Deals
-              </h3>
-              <p className="text-2xl font-bold text-yellow-700">
-                {stats.deals}
-              </p>
-              <div className="mt-2 text-sm text-yellow-600">View deals →</div>
-            </Link>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mt-6">
+              <Link
+                href="/companies"
+                className="bg-blue-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+              >
+                <h3 className="font-semibold text-lg">
+                  <BusinessIcon className="inline-block mr-2 text-teal-600" />{" "}
+                  Companies
+                </h3>
+                <p className="text-2xl font-bold text-blue-700">
+                  {stats.companies}
+                </p>
+                <div className="mt-2 text-sm text-blue-600">
+                  View companies →
+                </div>
+              </Link>
 
-            <div className="bg-indigo-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-lg">
-                <FolderIcon className="inline-block mr-2 text-indigo-700" />{" "}
-                Files
-              </h3>
-              <p className="text-2xl font-bold text-indigo-700">
-                {stats.files}
-              </p>
-              <div className="mt-2 flex justify-center gap-3">
-                <Link href="/files" className="text-sm text-indigo-600">
-                  View →
-                </Link>
+              <div className="bg-green-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow">
+                <h3 className="font-semibold text-lg">
+                  <PeopleIcon className="inline-block mr-2 text-green-600" />{" "}
+                  Contacts
+                </h3>
+                <p className="text-2xl font-bold text-green-700">
+                  {stats.contacts}
+                </p>
+                <div className="mt-2 flex justify-center gap-3">
+                  <Link href="/contacts" className="text-sm text-green-600">
+                    View →
+                  </Link>
+                  <button
+                    className="text-sm text-white bg-green-600 px-2 py-1 rounded"
+                    onClick={() => setShowNewContact(true)}
+                  >
+                    New contact
+                  </button>
+                </div>
+              </div>
+
+              <Link
+                href="/deals"
+                className="bg-yellow-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+              >
+                <h3 className="font-semibold text-lg">
+                  <LocalOfferIcon className="inline-block mr-2 text-yellow-600" />{" "}
+                  Deals
+                </h3>
+                <p className="text-2xl font-bold text-yellow-700">
+                  {stats.deals}
+                </p>
+                <div className="mt-2 text-sm text-yellow-600">View deals →</div>
+              </Link>
+
+              <div className="bg-indigo-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow">
+                <h3 className="font-semibold text-lg">
+                  <FolderIcon className="inline-block mr-2 text-indigo-700" />{" "}
+                  Files
+                </h3>
+                <p className="text-2xl font-bold text-indigo-700">
+                  {stats.files}
+                </p>
+                <div className="mt-2 flex justify-center gap-3">
+                  <Link href="/files" className="text-sm text-indigo-600">
+                    View →
+                  </Link>
+                  <button
+                    className="text-sm text-white bg-indigo-600 px-2 py-1 rounded"
+                    onClick={() => setShowUploadFile(true)}
+                  >
+                    Upload file
+                  </button>
+                </div>
+              </div>
+
+              <Link
+                href="/tasks"
+                className="bg-purple-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
+              >
+                <h3 className="font-semibold text-lg">
+                  <TaskIcon className="inline-block mr-2 text-purple-600" />{" "}
+                  Tasks
+                </h3>
+                <p className="text-2xl font-bold text-purple-700">
+                  {stats.tasks}
+                </p>
+                <div className="mt-2 text-sm text-purple-600">View tasks →</div>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* New Contact Modal */}
+        {showNewContact && (
+          <ModalWrapper onClose={() => setShowNewContact(false)}>
+            <div className="bg-white rounded shadow p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-2">New contact</h3>
+
+              <label className="block text-sm">Name</label>
+              <input
+                value={contactForm.name}
+                onChange={(e) =>
+                  setContactForm((s) => ({ ...s, name: e.target.value }))
+                }
+                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+              />
+              {contactErrors.name && (
+                <div className="text-red-600 text-sm">{contactErrors.name}</div>
+              )}
+
+              <label className="block text-sm">Email</label>
+              <input
+                value={contactForm.email}
+                onChange={(e) =>
+                  setContactForm((s) => ({ ...s, email: e.target.value }))
+                }
+                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+              />
+              {contactErrors.email && (
+                <div className="text-red-600 text-sm">
+                  {contactErrors.email}
+                </div>
+              )}
+
+              <label className="block text-sm">Phone</label>
+              <input
+                value={contactForm.phone}
+                onChange={(e) =>
+                  setContactForm((s) => ({ ...s, phone: e.target.value }))
+                }
+                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+              />
+              {contactErrors.phone && (
+                <div className="text-red-600 text-sm">
+                  {contactErrors.phone}
+                </div>
+              )}
+
+              <label className="block text-sm">Company</label>
+              <input
+                value={contactForm.company}
+                onChange={(e) =>
+                  setContactForm((s) => ({ ...s, company: e.target.value }))
+                }
+                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+              />
+
+              <div className="flex justify-end gap-2">
                 <button
-                  className="text-sm text-white bg-indigo-600 px-2 py-1 rounded"
-                  onClick={() => setShowUploadFile(true)}
+                  className="px-3 py-1"
+                  onClick={() => setShowNewContact(false)}
                 >
-                  Upload file
+                  Cancel
+                </button>
+                <button
+                  className="px-3 py-1 bg-green-600 text-white rounded"
+                  onClick={handleCreateContact}
+                >
+                  {creating ? "Creating..." : "Create"}
                 </button>
               </div>
             </div>
+          </ModalWrapper>
+        )}
 
-            <Link
-              href="/tasks"
-              className="bg-purple-50 p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
-            >
-              <h3 className="font-semibold text-lg">
-                <TaskIcon className="inline-block mr-2 text-purple-600" /> Tasks
-              </h3>
-              <p className="text-2xl font-bold text-purple-700">
-                {stats.tasks}
-              </p>
-              <div className="mt-2 text-sm text-purple-600">View tasks →</div>
-            </Link>
-          </div>
+        {/* Upload File Modal */}
+        {showUploadFile && (
+          <ModalWrapper onClose={() => setShowUploadFile(false)}>
+            <div className="bg-white rounded shadow p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-2">Upload file</h3>
+              <label className="block text-sm">File</label>
+              <input
+                type="file"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+                className="mt-1 mb-3 w-full"
+              />
 
-          </div>
-        </div>
-
-          {/* New Contact Modal */}
-          {showNewContact && (
-            <ModalWrapper onClose={() => setShowNewContact(false)}>
-              <div className="bg-white rounded shadow p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-2">New contact</h3>
-
-                <label className="block text-sm">Name</label>
-                <input
-                  value={contactForm.name}
-                  onChange={(e) =>
-                    setContactForm((s) => ({ ...s, name: e.target.value }))
-                  }
-                  className="mt-1 mb-3 w-full border rounded px-3 py-2"
-                />
-                {contactErrors.name && (
-                  <div className="text-red-600 text-sm">
-                    {contactErrors.name}
-                  </div>
-                )}
-
-                <label className="block text-sm">Email</label>
-                <input
-                  value={contactForm.email}
-                  onChange={(e) =>
-                    setContactForm((s) => ({ ...s, email: e.target.value }))
-                  }
-                  className="mt-1 mb-3 w-full border rounded px-3 py-2"
-                />
-                {contactErrors.email && (
-                  <div className="text-red-600 text-sm">
-                    {contactErrors.email}
-                  </div>
-                )}
-
-                <label className="block text-sm">Phone</label>
-                <input
-                  value={contactForm.phone}
-                  onChange={(e) =>
-                    setContactForm((s) => ({ ...s, phone: e.target.value }))
-                  }
-                  className="mt-1 mb-3 w-full border rounded px-3 py-2"
-                />
-                {contactErrors.phone && (
-                  <div className="text-red-600 text-sm">
-                    {contactErrors.phone}
-                  </div>
-                )}
-
-                <label className="block text-sm">Company</label>
-                <input
-                  value={contactForm.company}
-                  onChange={(e) =>
-                    setContactForm((s) => ({ ...s, company: e.target.value }))
-                  }
-                  className="mt-1 mb-3 w-full border rounded px-3 py-2"
-                />
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    className="px-3 py-1"
-                    onClick={() => setShowNewContact(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-green-600 text-white rounded"
-                    onClick={handleCreateContact}
-                  >
-                    {creating ? "Creating..." : "Create"}
-                  </button>
+              {uploadProgress > 0 && (
+                <div className="w-full bg-gray-100 rounded overflow-hidden mb-3">
+                  <div
+                    style={{ width: `${uploadProgress}%` }}
+                    className="h-2 bg-teal-500"
+                  />
                 </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-3 py-1"
+                  onClick={() => setShowUploadFile(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-3 py-1 bg-indigo-600 text-white rounded"
+                  onClick={handleFileUpload}
+                >
+                  {creating ? "Uploading..." : "Upload"}
+                </button>
               </div>
-            </ModalWrapper>
-          )}
-
-          {/* Upload File Modal */}
-          {showUploadFile && (
-            <ModalWrapper onClose={() => setShowUploadFile(false)}>
-              <div className="bg-white rounded shadow p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-2">Upload file</h3>
-                <label className="block text-sm">File</label>
-                <input
-                  type="file"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                  className="mt-1 mb-3 w-full"
-                />
-
-                {uploadProgress > 0 && (
-                  <div className="w-full bg-gray-100 rounded overflow-hidden mb-3">
-                    <div
-                      style={{ width: `${uploadProgress}%` }}
-                      className="h-2 bg-teal-500"
-                    />
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    className="px-3 py-1"
-                    onClick={() => setShowUploadFile(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-indigo-600 text-white rounded"
-                    onClick={handleFileUpload}
-                  >
-                    {creating ? "Uploading..." : "Upload"}
-                  </button>
-                </div>
-              </div>
-            </ModalWrapper>
-          )}
-        </div>
+            </div>
+          </ModalWrapper>
+        )}
       </main>
     </div>
   );
