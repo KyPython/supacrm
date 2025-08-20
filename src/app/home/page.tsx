@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
-import Home from "@/app/home/page";
 import BusinessIcon from "@mui/icons-material/Business";
 import PeopleIcon from "@mui/icons-material/People";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -213,7 +212,20 @@ export default function Page() {
   }
 
   if (loading) return <div className="p-6">Checking authentication...</div>;
-  if (!user) return <Home />;
+  // Avoid importing/returning this module from itself (circular import).
+  // When unauthenticated the root `app/page.tsx` will render the public
+  // landing. Here, if there's no user, render a safe placeholder so the
+  // component doesn't re-import itself and cause a blank page.
+  if (!user)
+    return (
+      <div className="p-6">
+        <h2 className="h2">Welcome to SupaCRM</h2>
+        <p className="muted">
+          Please <a href="/login">Log in</a> or <a href="/signup">Sign up</a> to
+          continue.
+        </p>
+      </div>
+    );
 
   return (
     <div className="flex min-h-screen">
