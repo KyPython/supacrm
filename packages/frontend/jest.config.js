@@ -5,5 +5,6 @@ module.exports = {
   transform: {
     '^.+\\.jsx?$': 'babel-jest'
   },
+  testMatch: ['<rootDir>/test/**/*.test.jsx'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/']
 };

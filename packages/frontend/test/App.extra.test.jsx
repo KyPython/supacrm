@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../src/App'
+console.log('[test] App.extra.test.jsx loaded')
 
 beforeEach(() => jest.restoreAllMocks())
 
@@ -48,9 +49,9 @@ test('LineChart renders svg and points for timeseries data', async () => {
   global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(payload) }))
   render(<App />)
   await waitFor(() => expect(global.fetch).toHaveBeenCalled())
-  // verify svg exists and circle markers match data points
+  // verify svg exists and circle markers match data points (wait for render)
+  await waitFor(() => expect(document.querySelector('svg')).toBeInTheDocument())
   const svg = document.querySelector('svg')
-  expect(svg).toBeInTheDocument()
   const circles = svg.querySelectorAll('circle')
   expect(circles.length).toBe(4)
 })

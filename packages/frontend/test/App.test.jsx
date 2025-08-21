@@ -6,6 +6,8 @@ beforeEach(() => {
   jest.restoreAllMocks()
 })
 
+console.log('[test] App.test.jsx loaded')
+
 test('renders header and form controls', async () => {
   global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ meta: { currentCursor: null, nextCursor: null, hasNext: false }, totals: [], timeseries: [] }) }))
   render(<App />)
