@@ -8,11 +8,20 @@ app.use(express.json());
 
 // Resolve DATABASE_URL but be tolerant of placeholder values (e.g. some CI envs set a sample like 'HOST')
 const DEFAULT_DB = 'postgresql://user:pass@localhost:5432/reportengine';
-let DATABASE_URL = process.env.DATABASE_URL || DEFAULT_DB;
+// prefer an explicit env var; keep a DEFAULT_DB for local dev only
+const envDatabaseUrl = process.env.DATABASE_URL;
+let DATABASE_URL = envDatabaseUrl || DEFAULT_DB;
 // If someone left a placeholder hostname like HOST in the connection string, replace with localhost
 if (DATABASE_URL && DATABASE_URL.includes('HOST')) {
   console.warn('DATABASE_URL contains placeholder "HOST" — falling back to localhost');
   DATABASE_URL = DATABASE_URL.replace(/HOST/g, 'localhost');
+}
+// Fail fast in production when DATABASE_URL is not provided (helps surface config mistakes)
+if (process.env.NODE_ENV === 'production' && !envDatabaseUrl) {
+  console.error('\n*** FATAL: Missing DATABASE_URL environment variable in production.');
+  console.error('Set DATABASE_URL to a valid Postgres connection string in your host (Render/Vercel) settings.');
+  // exit so the platform shows a clear failed deploy/state instead of repeated ECONNREFUSED runtime errors
+  process.exit(1);
 }
 const pool = new Pool({ connectionString: DATABASE_URL });
 
@@ -22,7 +31,9 @@ async function safeQuery(text, params) {
   try {
     return await pool.query(text, params);
   } catch (err) {
-    console.error('DB query failed', err && err.message ? err.message : err);
+  // log full error + stack for easier debugging
+  console.error('DB query failed', err && err.message ? err.message : err);
+  if (err && err.stack) console.error(err.stack);
     if (process.env.NODE_ENV === 'test') {
       return { rows: [] };
     }
@@ -295,6 +306,14 @@ app.get('/api/admin/mv-status', async (req, res) => {
 });
 
 if (require.main === module) {
+  // Temporary error logging middleware (logs stack traces and returns stack in non-production)
+  app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err && err.stack ? err.stack : err);
+    const payload = { error: 'internal_error' };
+    if (process.env.NODE_ENV !== 'production' && err) payload.stack = err && err.stack ? err.stack : String(err);
+    res.status(500).json(payload);
+  });
+
   app.listen(port, () => console.log(`Backend listening on http://localhost:${port}`));
 }
 
