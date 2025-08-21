@@ -102,3 +102,47 @@ psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM mv_region_daily;"
 # run explain helper
 node packages/backend/scripts/explain.js
 ```
+
+## Verification & Benchmark
+
+I ran smoke tests and a small benchmark against the local stack (Postgres + backend).
+
+- Smoke test endpoints saved to `packages/backend/tmp/smoke.json` (health + /api/reports/summary sample response).
+- Benchmark (100 sequential requests) saved to `packages/backend/tmp/benchmark.json`.
+
+Benchmark summary (100 runs against `/api/reports/summary?start=2024-01-01&end=2025-08-20&groupBy=region&limit=10`):
+
+- mean: ~12.8 ms
+- p50: 12 ms
+- p90: 13 ms
+- p95: 14 ms
+- p99: 30 ms
+- min: 9 ms, max: 68 ms
+
+Notes:
+
+- Tests: backend and frontend tests pass in the repository (run `npm test` in each package).
+- EXPLAIN: the included `scripts/explain.js` prints a plan showing a sequential scan on `transactions` for the sample dataset; recommended indexes are provided in `packages/backend/migrations/001_add_indexes_and_mv.sql`.
+- Materialized view: `mv_region_daily` can be created/refreshed via `packages/backend/scripts/refresh_mv.js` to accelerate region-level queries.
+
+Next steps:
+
+- If you plan to run a production-like workload, apply the recommended indexes and refresh the materialized view before benchmarking.
+- Optionally build Docker images and run the full stack with `docker compose up --build` for a full integration smoke test.
+
+## Compose integration benchmark
+
+I updated the migrations to include a composite index on `(region_id, created_at)` and added `backend` and `frontend` services to `docker-compose.yml` so the full stack can be built and run.
+
+I ran the compose stack locally, seeded the DB, applied the migration, refreshed the materialized view, and ran a 100-request benchmark against the compose-hosted backend. Results saved to `packages/backend/tmp/benchmark_compose.json`.
+
+Compose benchmark summary (100 runs):
+
+- mean: ~15.9 ms
+- p50: 15 ms
+- p90: 20 ms
+- p95: 21 ms
+- p99: 25 ms
+- min: 10 ms, max: 59 ms
+
+CI: I added an `integration` job to `.github/workflows/ci.yml` which builds the compose stack and runs basic smoke tests.
