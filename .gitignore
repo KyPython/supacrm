@@ -1,0 +1,45 @@
+# Node
+node_modules/
+.next/
+.env*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel/
+
+# Build
+build/
+dist/
+
+# Mac
+.DS_Store
+
+# Misc
+*.swp
+*.swo
+*.log
+.cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Others
+*.local
+*.tmp
+*.bak
+*.old
+
+# Ignore system files
+Thumbs.db
