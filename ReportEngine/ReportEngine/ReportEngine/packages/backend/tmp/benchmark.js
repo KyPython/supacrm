@@ -7,11 +7,17 @@ const runs = parseInt(process.env.RUNS || '100', 10);
 async function call() {
   return new Promise((resolve, reject) => {
     const t0 = Date.now();
-    http.get(url, (res) => {
+    const req = http.get(url, (res) => {
       let body = '';
       res.on('data', (d) => body += d);
       res.on('end', () => resolve({ status: res.statusCode, time: Date.now() - t0, size: body.length }));
     }).on('error', reject);
+
+    // Set timeout to prevent hanging requests
+    req.setTimeout(30000, () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
   });
 }
 
@@ -31,10 +37,17 @@ async function call() {
   const count = times.length;
   const sum = times.reduce((s,v)=>s+v,0);
   const mean = count ? sum / count : null;
-  const p = (p) => { if (!count) return null; const idx = Math.floor((p/100) * (count-1)); return times[idx]; };
+  const p = (p) => {
+    if (!count) return null;
+    const idx = (p/100) * (count - 1);
+    const lower = Math.floor(idx);
+    const upper = Math.ceil(idx);
+    if (lower === upper) return times[lower];
+    return times[lower] + (times[upper] - times[lower]) * (idx - lower);
+  };
   const stats = { runs, count, mean, min: times[0]||null, max: times[count-1]||null, p50: p(50), p90: p(90), p95: p(95), p99: p(99) };
   const out = { stats, results };
-  const outPath = '/Users/ky/Desktop/GitHub/VS_Code/ReportEngine/ReportEngine/packages/backend/tmp/benchmark.json';
+  const outPath = process.env.OUTPUT_PATH || './benchmark.json';
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
   console.log('Saved', outPath, stats);
 })();

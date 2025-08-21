@@ -30,7 +30,21 @@ export default function App() {
     setLoading(true)
     setError(null)
     const useCursor = typeof overrideCursor !== 'undefined' ? overrideCursor : cursor
-    const url = new URL('http://localhost:4000/api/reports/summary')
+  // Prefer explicit environment variable. If not present, avoid calling an
+  // insecure localhost endpoint from an HTTPS-served page (mixed content).
+  // Use the production Render backend when the page is loaded over HTTPS,
+  // otherwise use localhost for local HTTP development.
+  const API_BASE = (() => {
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
+    try {
+      const isHttps = typeof location !== 'undefined' && location.protocol === 'https:'
+      return isHttps ? 'https://reportengine-backend.onrender.com' : 'http://localhost:4000'
+    } catch (e) {
+      // fallback safe default
+      return 'https://reportengine-backend.onrender.com'
+    }
+  })()
+  const url = new URL(`${API_BASE.replace(/\/+$/, '')}/api/reports/summary`)
     url.searchParams.set('start', start)
     url.searchParams.set('end', end)
     url.searchParams.set('groupBy', groupBy)
