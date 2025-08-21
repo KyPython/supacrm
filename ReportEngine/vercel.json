@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "ReportEngine/packages/frontend/package.json",
+      "src": "ReportEngine/packages/frontend/index.html",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
     }
