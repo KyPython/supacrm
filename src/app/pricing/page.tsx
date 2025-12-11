@@ -208,11 +208,9 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.plan_type}
-                className={`relative ${isCurrentPlan ? 'ring-2' : ''}`}
+                className="relative"
                 style={isCurrentPlan ? {
-                  borderColor: 'var(--brand)',
-                  borderWidth: '2px',
-                  borderStyle: 'solid',
+                  border: '2px solid var(--brand)',
                   borderRadius: 'var(--radius)',
                 } : {}}
               >
