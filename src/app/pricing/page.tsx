@@ -89,7 +89,7 @@ export default function PricingPage() {
     return num.toLocaleString();
   };
 
-  const getFeatureValue = (features: any, key: string): string | boolean => {
+  const getFeatureValue = (features: any, key: string): string | boolean | number => {
     const value = features?.[key];
     if (value === null || value === undefined) return false;
     if (typeof value === 'boolean') return value;
