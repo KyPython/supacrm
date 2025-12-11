@@ -10,6 +10,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'planType and billingPeriod are required' }, { status: 400 });
     }
 
+    // Check if Supabase is initialized
+    if (!supabase) {
+      logger.error('Supabase client not initialized');
+      return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
+    }
+
     // Get user from session
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {

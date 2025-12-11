@@ -73,6 +73,11 @@ export async function POST(request: NextRequest) {
 
 async function handleSubscriptionUpdate(subscription: any) {
   try {
+    if (!supabase) {
+      logger.error('Supabase client not initialized');
+      return;
+    }
+
     const { customer_id, product_id, status, id: subscription_id } = subscription;
     
     logger.debug('Processing subscription update', { 
@@ -167,6 +172,11 @@ async function handleSubscriptionUpdate(subscription: any) {
 
 async function handleSubscriptionCanceled(subscription: any) {
   try {
+    if (!supabase) {
+      logger.error('Supabase client not initialized');
+      return;
+    }
+
     const { id: subscription_id } = subscription;
     
     const { data: subscriptionData } = await supabase
