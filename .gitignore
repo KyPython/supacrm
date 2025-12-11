@@ -54,16 +54,14 @@ next-env.d.ts
 *.db-shm
 *.db-wal
 
-# SQL dumps and backups (keep schema.sql and migration files)
+# SQL files
+*.sql
 *.sql.dump
 *.sql.bak
 *.sql.backup
 *.dump
 *.bak
 *.backup
-database/*.dump
-database/*.bak
-database/*.backup
 
 # IDE files
 .vscode/
