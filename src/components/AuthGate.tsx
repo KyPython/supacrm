@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { debug, debugWarn, debugError } from "@/lib/debug";
+import { logger } from "@/lib/logger";
 
 export default function AuthGate() {
   const router = useRouter();
@@ -38,10 +39,7 @@ export default function AuthGate() {
                   "[AuthGate] created window.supabase from NEXT_PUBLIC env vars"
                 );
               } catch (e) {
-                console.error(
-                  "[AuthGate] failed to dynamically create supabase client:",
-                  e
-                );
+                logger.error('Failed to dynamically create supabase client', e instanceof Error ? e : new Error(String(e)));
                 const win3 = window as unknown as {
                   supabase?: typeof supabase | null;
                 };
@@ -120,7 +118,7 @@ export default function AuthGate() {
           }
         }
       } catch (err) {
-        console.error("[AuthGate] error checking session", err);
+        logger.error('Error checking session', err instanceof Error ? err : new Error(String(err)));
       }
     }
     checkSession();

@@ -85,14 +85,15 @@ async function checkDatabase(): Promise<boolean> {
     }
 
     // Simple query to check connectivity
+    // Use maybeSingle() to avoid 406 errors when table is empty
     const { error } = await supabase
       .from('contacts')
       .select('id')
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    // If error is null or just "no rows", database is healthy
-    return error === null || error.code === 'PGRST116';
+    // If error is null, database is healthy (maybeSingle returns null for empty results, not an error)
+    return error === null;
   } catch (error) {
     logger.error('Database health check failed', error as Error);
     return false;

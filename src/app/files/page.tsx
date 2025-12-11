@@ -1,24 +1,48 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FileObject } from "@supabase/storage-js";
 import { supabase } from "../../lib/supabase";
 import Container from "@/components/Container";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext.js";
+import { useUsage } from "@/hooks/useUsage";
+import { checkLimitExceeded, incrementUsage } from "@/lib/usage-tracking";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 
 export default function FileUploadPage() {
   // Auth context for current user
   const { user } = useAuth();
+  const { exceeded } = useUsage();
   // State for files list
   const [files, setFiles] = useState<FileObject[]>([]);
   // useForm for file upload state, validation, and error handling
   const form = useForm<{ file: File | null }>({ file: null });
   // General error state for non-field errors
   const [generalError, setGeneralError] = useState<string>("");
+  
+  // Check bucket and fetch files on mount
+  useEffect(() => {
+    if (user) {
+      fetchFiles();
+    }
+  }, [user]);
+
+  async function ensureBucketExists() {
+    if (!supabase) return false;
+    // Check if bucket exists by trying to list it
+    const { error } = await supabase.storage.from("files").list("", { limit: 1 });
+    if (error && error.message.includes("not found")) {
+      // Try to create the bucket (requires admin client or manual creation)
+      setGeneralError(
+        "Storage bucket 'files' not found. Please create it in Supabase Dashboard: Storage > New Bucket > Name: 'files' > Public: false > Create bucket"
+      );
+      return false;
+    }
+    return true;
+  }
 
   async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,17 +65,77 @@ export default function FileUploadPage() {
       form.setLoading(false);
       return;
     }
+    if (!supabase) {
+      setGeneralError("Supabase client not available.");
+      form.setLoading(false);
+      return;
+    }
+    
+    // Check storage limit before uploading
+    if (user?.id) {
+      const storageExceeded = await checkLimitExceeded(user.id, 'storage_bytes');
+      if (storageExceeded) {
+        setGeneralError("Storage limit reached. Please upgrade your plan to upload more files.");
+        form.setLoading(false);
+        return;
+      }
+      
+      // Additional check: verify current usage + new file size won't exceed limit
+      // This is a safety check - the main check above should catch most cases
+      if (exceeded?.storage_bytes) {
+        setGeneralError("Storage limit reached. Please upgrade your plan to upload more files.");
+        form.setLoading(false);
+        return;
+      }
+    }
+    
+    // Check if bucket exists
+    const bucketExists = await ensureBucketExists();
+    if (!bucketExists) {
+      form.setLoading(false);
+      return;
+    }
+    
     const filePath = `${user.id}/${form.values.file.name}`;
-    if (!supabase) return;
-    const { error } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from("files")
-      .upload(filePath, form.values.file);
-    if (!error) {
+      .upload(filePath, form.values.file, {
+        upsert: false, // Don't overwrite existing files
+      });
+    if (!uploadError) {
+      // Insert file metadata into files table
+      const { error: insertError } = await supabase.from("files").insert({
+        name: form.values.file.name,
+        bucket_name: "files",
+        original_name: form.values.file.name,
+        file_path: filePath,
+        file_size: form.values.file.size,
+        mime_type: form.values.file.type || "application/octet-stream",
+        uploaded_by: user.id,
+      });
+      
+      if (insertError) {
+        setGeneralError(`File uploaded but metadata insert failed: ${insertError.message}`);
+        form.setLoading(false);
+        return;
+      }
+      
+      // Update usage tracking
+      if (user?.id) {
+        await incrementUsage(user.id, 'storage_bytes', form.values.file.size);
+      }
+      
       fetchFiles();
       form.setValues({ file: null });
       form.setSuccess("File uploaded!");
     } else {
-      setGeneralError(error.message);
+      if (uploadError.message.includes("not found")) {
+        setGeneralError(
+          "Storage bucket 'files' not found. Please create it in Supabase Dashboard: Storage > New Bucket > Name: 'files' > Public: false > Create bucket"
+        );
+      } else {
+        setGeneralError(uploadError.message);
+      }
     }
     form.setLoading(false);
   }
@@ -62,12 +146,24 @@ export default function FileUploadPage() {
       setGeneralError("User not authenticated.");
       return;
     }
-    if (!supabase) return;
+    if (!supabase) {
+      setGeneralError("Supabase client not available.");
+      return;
+    }
     const { data, error } = await supabase.storage
       .from("files")
       .list(user.id + "/");
-    if (!error) setFiles((data as FileObject[]) || []);
-    else setGeneralError(error.message);
+    if (!error) {
+      setFiles((data as FileObject[]) || []);
+    } else {
+      if (error.message.includes("not found")) {
+        setGeneralError(
+          "Storage bucket 'files' not found. Please create it in Supabase Dashboard: Storage > New Bucket > Name: 'files' > Public: false > Create bucket"
+        );
+      } else {
+        setGeneralError(error.message);
+      }
+    }
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

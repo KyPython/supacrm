@@ -6,6 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
 import Button from "@/components/Button";
 import Alert from "@/components/Alert";
+import { logger } from "@/lib/logger";
+import { usePricing } from "@/hooks/usePricing";
+import { useUsage } from "@/hooks/useUsage";
 
 export default function SettingsPage() {
   const { user } = useAuth() ?? {};
@@ -14,6 +17,8 @@ export default function SettingsPage() {
   const supabaseAvailable = !!supabase;
   const debugApiEnabled =
     typeof window !== "undefined" && process.env.NODE_ENV !== "production";
+  const { allPricing } = usePricing();
+  const { plan: currentPlan, limits, usage, exceeded } = useUsage();
 
   const debugUser = debug
     ? {
@@ -27,6 +32,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  
+  // Get billing tab from URL
+  const tabParam = searchParams?.get?.("tab");
+  const initialTab = tabParam === "billing" ? 3 : 0;
 
   const [profile, setProfile] = useState({
     firstName: "",
@@ -42,7 +51,7 @@ export default function SettingsPage() {
     sessionTimeout: 30,
     passwordExpiry: 90,
   });
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     const init = async () => {
@@ -77,10 +86,11 @@ export default function SettingsPage() {
             .from("user_settings")
             .select("*")
             .eq("id", effectiveUser.id)
-            .single();
+            .maybeSingle();
           const data = (res as any)?.data ?? null;
           const fetchErr = (res as any)?.error ?? null;
-          if (fetchErr && fetchErr.code !== "PGRST116") {
+          // maybeSingle() returns null for missing records, so only log actual errors
+          if (fetchErr) {
             try {
               (await import("@/lib/analytics")).track(
                 "user_settings_fetch_failed",
@@ -136,7 +146,7 @@ export default function SettingsPage() {
         debugApiEnabled,
       });
     } catch (err: any) {
-      console.error(err);
+      logger.error('Failed to save profile', err instanceof Error ? err : new Error(String(err)), { userId: effectiveUser?.id });
       setError(String(err?.message ?? err));
     } finally {
       setSaving(false);
@@ -157,7 +167,7 @@ export default function SettingsPage() {
         debugApiEnabled,
       });
     } catch (err: any) {
-      console.error(err);
+      logger.error('Failed to save notifications', err instanceof Error ? err : new Error(String(err)), { userId: effectiveUser?.id });
       setError(String(err?.message ?? err));
     } finally {
       setSaving(false);
@@ -166,6 +176,13 @@ export default function SettingsPage() {
 
   const saveSecurity = async () => {
     if (!effectiveUser) return setError("Not authenticated");
+    
+    // Guard against race condition: check for user.id
+    const id = (effectiveUser as any)?.id;
+    if (!id) {
+      return setError("User ID not available - authentication may still be in progress");
+    }
+    
     setSaving(true);
     setError("");
     try {
@@ -181,7 +198,6 @@ export default function SettingsPage() {
           );
         } catch {}
       } else {
-        const id = (effectiveUser as any).id;
         const payload = {
           id,
           session_timeout: security.sessionTimeout,
@@ -192,7 +208,7 @@ export default function SettingsPage() {
             const { data, error } = await supabase
               .from("user_settings")
               .upsert(payload, { onConflict: "id" });
-            console.debug("[settings] user_settings upsert", { data, error });
+            logger.debug('user_settings upsert', { data, error: error?.message });
             if (error) throw error;
             try {
               (await import("@/lib/analytics")).track(
@@ -201,10 +217,7 @@ export default function SettingsPage() {
             } catch {}
             return;
           } catch (e) {
-            console.warn(
-              "[settings] supabase user_settings upsert failed, will try debug API if available",
-              e
-            );
+            logger.warn('Supabase user_settings upsert failed, will try debug API if available', { error: e instanceof Error ? e.message : String(e) });
           }
         }
 
@@ -216,7 +229,7 @@ export default function SettingsPage() {
               body: JSON.stringify({ id, security: payload }),
             });
             const body = await res.json().catch(() => null);
-            console.debug("[settings] debug api response (security)", body);
+            logger.debug('Debug API response (security)', { body });
             if (body?.error) throw new Error(String(body.error));
             try {
               (await import("@/lib/analytics")).track(
@@ -225,7 +238,7 @@ export default function SettingsPage() {
             } catch {}
             return;
           } catch (apiErr) {
-            console.error("[settings] debug API security save failed", apiErr);
+            logger.error('Debug API security save failed', apiErr instanceof Error ? apiErr : new Error(String(apiErr)), { userId: id });
             throw apiErr;
           }
         }
@@ -234,7 +247,7 @@ export default function SettingsPage() {
         );
       }
     } catch (err: any) {
-      console.error(err);
+      logger.error('Failed to save security settings', err instanceof Error ? err : new Error(String(err)), { userId: effectiveUser?.id });
       setError(String(err?.message ?? err));
     } finally {
       setSaving(false);
@@ -317,6 +330,17 @@ export default function SettingsPage() {
                 }
               >
                 Security
+              </button>
+              <button
+                className={`py-2 px-3 ${activeTab === 3 ? "border-b-2" : ""}`}
+                onClick={() => setActiveTab(3)}
+                style={
+                  activeTab === 3
+                    ? { borderBottomColor: "var(--brand)" }
+                    : undefined
+                }
+              >
+                Billing
               </button>
             </nav>
           </div>
@@ -469,6 +493,125 @@ export default function SettingsPage() {
                   >
                     {saving ? "Saving..." : "Save Security"}
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 3 && (
+              <div className="space-y-6">
+                {/* Current Plan */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Current Plan</h3>
+                  <div className="p-4 rounded" style={{ background: "var(--card)" }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xl font-semibold capitalize">{currentPlan || "Free"}</span>
+                      {currentPlan && currentPlan !== "free" && (
+                        <span className="px-2 py-1 text-xs rounded" style={{ background: "var(--brand-10)", color: "var(--brand)" }}>
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    {allPricing.find(p => p.plan_type === currentPlan) && (
+                      <p className="text-sm" style={{ color: "var(--muted)" }}>
+                        {allPricing.find(p => p.plan_type === currentPlan)?.display_name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Usage */}
+                {limits && usage && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Usage</h3>
+                    <div className="space-y-3">
+                      {limits.max_contacts !== null && (
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Contacts</span>
+                            <span style={{ color: exceeded?.contacts ? "var(--danger)" : "var(--muted)" }}>
+                              {usage.contacts?.toLocaleString() || 0} / {limits.max_contacts?.toLocaleString() || "Unlimited"}
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full" style={{ background: "var(--card)" }}>
+                            <div
+                              className="h-2 rounded-full"
+                              style={{
+                                width: `${Math.min(100, ((usage.contacts || 0) / (limits.max_contacts || 1)) * 100)}%`,
+                                background: exceeded?.contacts ? "var(--danger)" : "var(--brand)",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {limits.max_users !== null && (
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Users</span>
+                            <span style={{ color: exceeded?.users ? "var(--danger)" : "var(--muted)" }}>
+                              {usage.users || 0} / {limits.max_users || "Unlimited"}
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full" style={{ background: "var(--card)" }}>
+                            <div
+                              className="h-2 rounded-full"
+                              style={{
+                                width: `${Math.min(100, ((usage.users || 0) / (limits.max_users || 1)) * 100)}%`,
+                                background: exceeded?.users ? "var(--danger)" : "var(--brand)",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {limits.max_storage_bytes !== null && (
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Storage</span>
+                            <span style={{ color: exceeded?.storage_bytes ? "var(--danger)" : "var(--muted)" }}>
+                              {((usage.storage_bytes || 0) / (1024 * 1024 * 1024)).toFixed(2)} GB / {((limits.max_storage_bytes || 0) / (1024 * 1024 * 1024)).toFixed(0)} GB
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full" style={{ background: "var(--card)" }}>
+                            <div
+                              className="h-2 rounded-full"
+                              style={{
+                                width: `${Math.min(100, ((usage.storage_bytes || 0) / (limits.max_storage_bytes || 1)) * 100)}%`,
+                                background: exceeded?.storage_bytes ? "var(--danger)" : "var(--brand)",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Manage Subscription</h3>
+                  <div className="space-y-3">
+                    <Button
+                      href="/pricing"
+                      variant="primary"
+                      className="w-full"
+                    >
+                      View All Plans
+                    </Button>
+                    {currentPlan && currentPlan !== "free" && (
+                      <p className="text-sm text-center" style={{ color: "var(--muted)" }}>
+                        To manage your subscription or payment method, visit your{" "}
+                        <a
+                          href="https://polar.sh"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: "var(--brand)" }}
+                        >
+                          Polar customer portal
+                        </a>
+                        .
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

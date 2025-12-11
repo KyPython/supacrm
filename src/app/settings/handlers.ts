@@ -3,6 +3,8 @@
 // flexible and avoid tight coupling to client types in this small helper.
 type SupabaseLike = any;
 
+import { logger } from '@/lib/logger';
+
 export async function saveNotificationsHandler(opts: {
   effectiveUser: any;
   notifications: { email: boolean; sms: boolean; weekly: boolean };
@@ -12,7 +14,14 @@ export async function saveNotificationsHandler(opts: {
 }) {
   const { effectiveUser, notifications, supabase, debug, debugApiEnabled } =
     opts;
+  
+  // Guard against race condition: check for user and user.id
   if (!effectiveUser) throw new Error("Not authenticated");
+  
+  const id = (effectiveUser as any)?.id;
+  if (!id) {
+    throw new Error("User ID not available - authentication may still be in progress");
+  }
 
   if (debug) {
     const saved = JSON.parse(localStorage.getItem("settings_debug") || "{}");
@@ -23,7 +32,6 @@ export async function saveNotificationsHandler(opts: {
 
   if (!supabase) throw new Error("Supabase client not available");
 
-  const id = (effectiveUser as any).id;
   const payload = {
     id,
     email_notifications: notifications.email,
@@ -36,9 +44,17 @@ export async function saveNotificationsHandler(opts: {
       onConflict: "id",
     });
     const upsertErr = res?.error ?? null;
-    if (upsertErr) throw upsertErr;
+    if (upsertErr) {
+      // Check if it's a table/column missing error
+      if (upsertErr.message?.includes("relation") || upsertErr.message?.includes("column")) {
+        // Table or column doesn't exist - this is expected if schema isn't set up
+        logger.debug('user_settings table/column missing, skipping Supabase save', { userId: id });
+        throw new Error("Table or column not found - schema may need to be set up");
+      }
+      throw upsertErr;
+    }
     return { ok: true };
-  } catch (errUpsert) {
+  } catch (errUpsert: any) {
     if (debugApiEnabled) {
       const res = await fetch("/api/debug/settings", {
         method: "POST",
@@ -74,7 +90,14 @@ export async function saveProfileHandler(opts: {
   debugApiEnabled?: boolean;
 }) {
   const { effectiveUser, profile, supabase, debug, debugApiEnabled } = opts;
+  
+  // Guard against race condition: check for user and user.id
   if (!effectiveUser) throw new Error("Not authenticated");
+  
+  const id = (effectiveUser as any)?.id;
+  if (!id) {
+    throw new Error("User ID not available - authentication may still be in progress");
+  }
 
   if (debug) {
     const saved = JSON.parse(localStorage.getItem("settings_debug") || "{}");
@@ -83,7 +106,6 @@ export async function saveProfileHandler(opts: {
     return { ok: true };
   }
 
-  const id = (effectiveUser as any).id;
   const payload = {
     id,
     first_name: profile.firstName,
@@ -109,9 +131,16 @@ export async function saveProfileHandler(opts: {
   try {
     const res = await (supabase as any).from("user_profiles").upsert(payload, { onConflict: "id" });
     const err = res?.error ?? null;
-    if (err) throw err;
+    if (err) {
+      // Check if it's a table/column missing error
+      if (err.message?.includes("relation") || err.message?.includes("column")) {
+        logger.debug('user_profiles table/column missing, skipping Supabase save', { userId: payload.id });
+        throw new Error("Table or column not found - schema may need to be set up");
+      }
+      throw err;
+    }
     return { ok: true };
-  } catch (e) {
+  } catch (e: any) {
     if (debugApiEnabled) {
       const res = await fetch("/api/debug/settings", {
         method: "POST",

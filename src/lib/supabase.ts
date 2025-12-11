@@ -1,5 +1,6 @@
 // lib/supabase.ts
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { logger } from './logger';
 
 let supabase: SupabaseClient | null = null;
 const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,8 +18,7 @@ function sanitizeUrl(u?: string | null) {
   const m = s.match(userinfoRegex);
   if (m) {
     try {
-      // eslint-disable-next-line no-console
-      console.warn('[supabase] NEXT_PUBLIC_SUPABASE_URL contained credentials; credentials removed for safety.');
+      logger.warn('NEXT_PUBLIC_SUPABASE_URL contained credentials; credentials removed for safety');
     } catch (e) {}
     s = m[1] + m[2];
   }
@@ -41,7 +41,7 @@ function isValidPublicSupabaseUrl(u?: string | null) {
 }
 
 if (!url || !key) {
-  console.warn("Supabase API key or URL is missing. Check your .env.local file.");
+  logger.warn('Supabase API key or URL is missing. Check your .env.local file.');
 } else {
   try {
     // Try to create the client with the sanitized URL. If the sanitized URL
@@ -49,9 +49,9 @@ if (!url || !key) {
     supabase = createClient(url, key);
   } catch (err) {
     // Log a single clear error; do not spam multiple warnings elsewhere.
-    console.error(
-      "Failed to create Supabase client from NEXT_PUBLIC_SUPABASE_URL. Check the URL format (https://<project>.supabase.co) and ensure it does not include credentials.",
-      err
+    logger.error(
+      'Failed to create Supabase client from NEXT_PUBLIC_SUPABASE_URL. Check the URL format (https://<project>.supabase.co) and ensure it does not include credentials.',
+      err instanceof Error ? err : new Error(String(err))
     );
     supabase = null;
   }
@@ -69,11 +69,11 @@ if (typeof window === "undefined") {
     try {
       supabaseAdminInstance = createClient(adminUrl, adminKey);
     } catch (err) {
-      console.error("Failed to create Supabase admin client:", err);
+      logger.error('Failed to create Supabase admin client', err instanceof Error ? err : new Error(String(err)));
       supabaseAdminInstance = null;
     }
   } else {
-    console.warn("Supabase admin credentials missing. Admin client not available.");
+    logger.warn('Supabase admin credentials missing. Admin client not available.');
   }
 }
 
@@ -84,30 +84,25 @@ export const supabaseAdmin: SupabaseClient | null = supabaseAdminInstance;
 if (typeof window !== 'undefined') {
   try {
     if (!url || !key) {
-      console.warn(
-        '[supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Setting window.supabase = null for clarity.'
-      );
+      logger.warn('NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Setting window.supabase = null for clarity.');
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else if (!supabase) {
       // If we failed to create the client above, surface a single warning and
       // avoid attempting to create it again here (prevents duplicate errors).
-      console.warn(
-        '[supabase] Supabase client not available at runtime; check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
-      );
+      logger.warn('Supabase client not available at runtime; check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else {
-      // Client exists; attach it and emit a masked host diagnostic once.
+      // Client exists; attach it and emit a masked host diagnostic once (development only)
       try {
         const host = new URL(url as string).host;
-        // eslint-disable-next-line no-console
-        console.warn('[supabase] runtime public host=', host);
+        logger.debug('Supabase runtime public host', { host });
       } catch (e) {
         // ignore
       }
       (window as unknown as { supabase: SupabaseClient | null }).supabase = supabase;
     }
   } catch (err) {
-    console.error('[supabase] Error exposing client to window:', err);
+    logger.error('Error exposing client to window', err instanceof Error ? err : new Error(String(err)));
     (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
   }
 }

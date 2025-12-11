@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { usePageTracking, useComponentObservability } from "../../hooks/useObservability";
+import { useUsage } from "@/hooks/useUsage";
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 function DashboardContent() {
+  const { usageStatus, exceeded } = useUsage();
   const [counts, setCounts] = useState({
     companies: 0,
     contacts: 0,
@@ -61,9 +64,42 @@ function DashboardContent() {
     fetchCounts();
   }, [log]);
 
+  // Check if any limits are exceeded
+  const hasExceededLimits = exceeded && (
+    exceeded.contacts || exceeded.companies || exceeded.deals || exceeded.storage_bytes
+  );
+
   return (
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      {hasExceededLimits && usageStatus && (
+        <div className="mb-6">
+          {exceeded.contacts && (
+            <UpgradePrompt
+              feature="contacts"
+              currentCount={usageStatus.usage.contacts}
+              limit={usageStatus.limits.max_contacts || 0}
+              className="mb-3"
+            />
+          )}
+          {exceeded.companies && (
+            <UpgradePrompt
+              feature="companies"
+              currentCount={usageStatus.usage.companies}
+              limit={usageStatus.limits.max_companies || 0}
+              className="mb-3"
+            />
+          )}
+          {exceeded.deals && (
+            <UpgradePrompt
+              feature="deals"
+              currentCount={usageStatus.usage.deals}
+              limit={usageStatus.limits.max_deals || 0}
+              className="mb-3"
+            />
+          )}
+        </div>
+      )}
       {error && <div className="alert alert-danger">{error}</div>}
       {loading ? (
         <p>Loading...</p>

@@ -3,6 +3,7 @@ import { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { debug, debugWarn, debugError } from '@/lib/debug';
 import { useRouter, usePathname } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 const AuthContext = createContext(null);
 
@@ -50,7 +51,7 @@ export function AuthProvider({ children }) {
         const { data: { session } } = await supabase.auth.getSession();
         debug('[AuthProvider] initial session', session);
         if (session) {
-          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).single();
+          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).maybeSingle();
           if (profileError) debugWarn('[AuthProvider] profile fetch error (ignored):', profileError);
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 
@@ -75,7 +76,7 @@ export function AuthProvider({ children }) {
       debug('[AuthProvider] auth state change', event, session);
       try {
         if (session) {
-          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).single();
+          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).maybeSingle();
           if (profileError) debugWarn('[AuthProvider] profile fetch error (ignored):', profileError);
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 
@@ -103,7 +104,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return data;
     } catch (err) {
-      console.error('[AuthProvider] login error', err);
+      logger.error('Login error', err instanceof Error ? err : new Error(String(err)), { email });
       throw err;
     }
   };
@@ -115,7 +116,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return data;
     } catch (err) {
-      console.error('[AuthProvider] signup error', err);
+      logger.error('Signup error', err instanceof Error ? err : new Error(String(err)), { email });
       throw err;
     }
   };
@@ -127,7 +128,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return data;
     } catch (err) {
-      console.error('[AuthProvider] magic link error', err);
+      logger.error('Magic link error', err instanceof Error ? err : new Error(String(err)), { email });
       throw err;
     }
   };

@@ -1,4 +1,7 @@
 import { safeSerialize } from "./safeSerialize";
+import { logger } from "./logger";
+
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 export function track(event: string, payload?: Record<string, any>) {
   // Client-side tracking shim. Sends events to /api/analytics (server forwards to provider)
@@ -15,13 +18,16 @@ export function track(event: string, payload?: Record<string, any>) {
       });
     }
 
-    // keep a local debug fallback so we still have visibility during development
-    // (this will be a no-op in production if you don't open the console)
-    // eslint-disable-next-line no-console
-    try {
-      console.debug(`[analytics] ${event}`, safeSerialize(payload ?? {}));
-    } catch (e) {
-      console.debug(`[analytics] ${event}`);
+    // Log analytics events (development only in console, always tracked in observability)
+    if (isDevelopment) {
+      try {
+        logger.debug(`Analytics event: ${event}`, safeSerialize(payload ?? {}));
+      } catch (e) {
+        logger.debug(`Analytics event: ${event}`);
+      }
+    } else {
+      // In production, still track but don't spam console
+      // Events are sent to observability via /api/analytics
     }
   } catch (e) {
     // swallow errors — analytics should not break the app

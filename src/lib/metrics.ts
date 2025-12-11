@@ -67,16 +67,40 @@ class MetricsCollector {
       });
     }
 
-    // Server-side: log as structured JSON
-    if (typeof window === 'undefined') {
-      console.log(JSON.stringify({
-        type: 'metric',
-        name: metric.name,
-        value: metric.value,
-        unit: metric.unit,
-        tags: metric.tags,
-        timestamp: metric.timestamp || Date.now(),
-      }));
+    // Server-side: log as structured JSON (always in production for metrics aggregation)
+    // Client-side: only log in development
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const shouldLogToConsole = typeof window === 'undefined' || isDevelopment;
+    
+    if (shouldLogToConsole) {
+      logger.debug('Metric recorded', {
+        metric_name: metric.name,
+        metric_value: metric.value,
+        metric_unit: metric.unit,
+        ...metric.tags,
+      });
+    }
+
+    // Always send to observability endpoint (fire and forget)
+    if (typeof window !== 'undefined') {
+      try {
+        fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'metric',
+            name: metric.name,
+            value: metric.value,
+            unit: metric.unit,
+            tags: metric.tags,
+            timestamp: metric.timestamp || Date.now(),
+          }),
+        }).catch(() => {
+          // Ignore analytics errors
+        });
+      } catch (e) {
+        // Ignore analytics errors
+      }
     }
   }
 

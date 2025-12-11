@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
+import { logger } from "@/lib/logger";
 import Landing from "@/app/home/Landing";
 import BusinessIcon from "@mui/icons-material/Business";
 import PeopleIcon from "@mui/icons-material/People";
@@ -66,7 +67,7 @@ export default function Page() {
         files: files?.count ?? 0,
       });
     } catch (e) {
-      console.error("Failed to load stats", e);
+      logger.error("Failed to load stats", e instanceof Error ? e : new Error(String(e)), { userId: user?.id });
       toast.error("Failed to load stats");
     }
   }
@@ -118,7 +119,7 @@ export default function Page() {
       // refresh counts
       fetchCounts();
     } catch (e: any) {
-      console.error("create contact failed", e);
+      logger.error("Failed to create contact", e instanceof Error ? e : new Error(String(e)), { userId: user?.id });
       setStats((s) => ({ ...s, contacts: Math.max(0, s.contacts - 1) }));
       toast.error("Failed to create contact");
       track("create_contact_error", { message: e?.message || String(e) });
@@ -173,16 +174,16 @@ export default function Page() {
                 publicUrl = pub?.data?.publicUrl ?? pub?.publicURL ?? null;
               } catch (e) {}
 
+              if (!user?.id) throw new Error("User not authenticated");
+              
               const { error: metaErr } = await supabase.from("files").insert({
                 name: selectedFile.name,
-                path: key,
-                size: selectedFile.size,
                 bucket_name: "uploads",
                 original_name: selectedFile.name,
                 file_path: key,
                 file_size: selectedFile.size,
                 mime_type: selectedFile.type || "application/octet-stream",
-                public_url: publicUrl,
+                uploaded_by: user.id,
               });
               if (metaErr) throw metaErr;
               setUploadProgress(100);
@@ -203,7 +204,7 @@ export default function Page() {
         xhr.send(selectedFile as Blob);
       });
     } catch (e: any) {
-      console.error("upload failed", e);
+      logger.error("File upload failed", e instanceof Error ? e : new Error(String(e)), { userId: user?.id, fileName: selectedFile?.name });
       toast.error("Upload failed: " + (e?.message || e));
       track("upload_file_error", { message: e?.message || String(e) });
     } finally {

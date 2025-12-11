@@ -76,8 +76,8 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: BRAND.surface,
-        color: "#fff",
+        backgroundColor: "var(--card)",
+        color: "var(--fg)",
       }}
     >
       <Box
@@ -89,12 +89,12 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
       >
         <Typography
           variant="h6"
-          sx={{ color: BRAND.primary, fontWeight: "bold" }}
+          sx={{ color: "var(--brand)", fontWeight: "bold" }}
         >
           SupaCRM
         </Typography>
       </Box>
-      <Divider />
+      <Divider sx={{ borderColor: "var(--surface-20)" }} />
       <List sx={{ flexGrow: 1, px: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
@@ -102,14 +102,31 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
               component={Link}
               href={item.path}
               selected={pathname === item.path}
+              sx={{
+                color: "var(--fg)",
+                "&.Mui-selected": {
+                  backgroundColor: "var(--brand-10)",
+                  color: "var(--brand)",
+                },
+                "&:hover": {
+                  backgroundColor: "var(--surface-10)",
+                },
+              }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemIcon 
+                sx={{ 
+                  minWidth: 40,
+                  color: pathname === item.path ? "var(--brand)" : "var(--fg)",
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
-      <Divider />
+      <Divider sx={{ borderColor: "var(--surface-20)" }} />
       <Box sx={{ p: 2 }}>
         <Box
           sx={{
@@ -121,7 +138,7 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
             mb: 1,
           }}
         >
-          <Avatar sx={{ width: 40, height: 40, mr: 2, bgcolor: BRAND.primary }}>
+          <Avatar sx={{ width: 40, height: 40, mr: 2, bgcolor: "var(--brand)" }}>
             {user?.first_name?.[0] || user?.email?.[0]}
           </Avatar>
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -191,6 +208,8 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              backgroundColor: "var(--card)",
+              color: "var(--fg)",
             },
           }}
         >
@@ -203,8 +222,8 @@ export default function AppRouter({ children }: { children?: ReactNode }) {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
-              backgroundColor: BRAND.surface,
-              color: "#fff",
+              backgroundColor: "var(--card)",
+              color: "var(--fg)",
             },
           }}
           open

@@ -6,6 +6,9 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
+import { useUsage } from "@/hooks/useUsage";
+import { checkLimitExceeded, incrementUsage, decrementUsage } from "@/lib/usage-tracking";
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 function DealsPageContent() {
   // Deal type
@@ -17,6 +20,7 @@ function DealsPageContent() {
 
   const auth = useAuth() ?? {};
   const { user } = auth;
+  const { usageStatus, exceeded } = useUsage();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [generalError, setGeneralError] = useState<string>("");
   const form = useForm<{ title: string; amount: string }>({
@@ -54,6 +58,15 @@ function DealsPageContent() {
     )
       return;
 
+    // Check limit before creating
+    if (user?.id) {
+      const limitExceeded = await checkLimitExceeded(user.id, 'deals');
+      if (limitExceeded) {
+        setGeneralError("Deal limit reached. Please upgrade your plan to add more deals.");
+        return;
+      }
+    }
+
     form.setLoading(true);
     if (!supabase) return;
     const { error } = await supabase.from("deals").insert([
@@ -63,6 +76,10 @@ function DealsPageContent() {
       },
     ]);
     if (!error) {
+      // Update usage tracking
+      if (user?.id) {
+        await incrementUsage(user.id, 'deals', 1);
+      }
       form.setValues({ title: "", amount: "" });
       form.setSuccess("Deal added!");
       fetchDeals();
@@ -77,8 +94,15 @@ function DealsPageContent() {
     setGeneralError("");
     if (!supabase) return;
     const { error } = await supabase.from("deals").delete().eq("id", id);
-    if (!error) fetchDeals();
-    else setGeneralError(error.message);
+    if (!error) {
+      // Update usage tracking
+      if (user?.id) {
+        await decrementUsage(user.id, 'deals', 1);
+      }
+      fetchDeals();
+    } else {
+      setGeneralError(error.message);
+    }
     form.setLoading(false);
   }
 
@@ -86,6 +110,14 @@ function DealsPageContent() {
     <Container>
       <Card>
         <h1 className="h1">Deals</h1>
+        {exceeded?.deals && usageStatus && (
+          <UpgradePrompt
+            feature="deals"
+            currentCount={usageStatus.usage.deals}
+            limit={usageStatus.limits.max_deals || 0}
+            className="mb-4"
+          />
+        )}
         <ErrorBanner
           error={form.errors.title || form.errors.amount || generalError}
         />

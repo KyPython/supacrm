@@ -2,6 +2,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
+import { useAuth } from "@/context/AuthContext.js";
+import { useUsage } from "@/hooks/useUsage";
+import { checkLimitExceeded, incrementUsage, decrementUsage } from "@/lib/usage-tracking";
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 interface Company {
   id: number;
@@ -13,6 +17,9 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 
 export default function CompaniesPage() {
+  const auth = useAuth() ?? {};
+  const { user } = auth;
+  const { usageStatus, exceeded } = useUsage();
   const [companies, setCompanies] = useState<Company[]>([]);
   const form = useForm<{ name: string }, Record<string, string>>({ name: "" });
 
@@ -30,12 +37,26 @@ export default function CompaniesPage() {
 
   async function addCompany(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    
+    // Check limit before creating
+    if (user?.id) {
+      const limitExceeded = await checkLimitExceeded(user.id, 'companies');
+      if (limitExceeded) {
+        form.setErrors({ submit: "Company limit reached. Please upgrade your plan to add more companies." });
+        return;
+      }
+    }
+    
     form.setLoading(true);
     if (!supabase) return;
     const { error } = await supabase
       .from("companies")
       .insert([{ name: form.values.name }]);
     if (!error) {
+      // Update usage tracking
+      if (user?.id) {
+        await incrementUsage(user.id, 'companies', 1);
+      }
       // Refresh list
       if (!supabase) return;
       const { data } = await supabase.from("companies").select("*");
@@ -52,6 +73,10 @@ export default function CompaniesPage() {
     if (!supabase) return;
     const { error } = await supabase.from("companies").delete().eq("id", id);
     if (!error) {
+      // Update usage tracking
+      if (user?.id) {
+        await decrementUsage(user.id, 'companies', 1);
+      }
       // Refresh list
       if (!supabase) return;
       const { data } = await supabase.from("companies").select("*");
@@ -66,6 +91,14 @@ export default function CompaniesPage() {
     <Container>
       <Card>
         <h1 className="h1">Companies</h1>
+        {exceeded?.companies && usageStatus && (
+          <UpgradePrompt
+            feature="companies"
+            currentCount={usageStatus.usage.companies}
+            limit={usageStatus.limits.max_companies || 0}
+            className="mb-4"
+          />
+        )}
         <ErrorBanner
           error={
             form.errors.name ||

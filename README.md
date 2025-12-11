@@ -63,14 +63,31 @@ npm run health:check
    - Enable RLS on all tables in Supabase dashboard
    - This is a **critical security requirement**
 
-2. **Verify Observability**
+2. **Create Storage Bucket (Required for File Uploads)**
+   - **Option A (Recommended)**: Use the API endpoint:
+     ```bash
+     curl http://localhost:3001/api/storage/setup
+     ```
+     This will automatically create the `files` bucket if it doesn't exist.
+   
+   - **Option B**: Manual creation in Supabase Dashboard:
+     1. Go to your Supabase project dashboard
+     2. Navigate to **Storage** in the sidebar
+     3. Click **New Bucket**
+     4. Name: `files`
+     5. Public: **Unchecked** (private bucket)
+     6. File size limit: 50MB (or your preferred limit)
+     7. Click **Create bucket**
+     8. Set up RLS policies to allow users to upload/download their own files
+
+3. **Verify Observability**
    ```bash
    npm run observability:check
    # Should show: ✅ Passed: 8
    ```
 
-3. **Access the Application**
-   - Open http://localhost:3000
+4. **Access the Application**
+   - Open http://localhost:3001
    - Sign up or log in
    - Navigate to dashboard
 

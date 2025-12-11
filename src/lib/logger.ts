@@ -37,7 +37,11 @@ class Logger {
     this.service = process.env.NEXT_PUBLIC_SERVICE_NAME || 'supacrm';
     this.environment = process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || 'development';
     this.version = process.env.NEXT_PUBLIC_VERSION || '0.1.0';
-    this.minLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
+    
+    // In production, default to 'warn' level unless LOG_LEVEL is set
+    // In development, default to 'debug' for verbose logging
+    const defaultLevel = this.environment === 'production' ? 'warn' : 'debug';
+    this.minLevel = (process.env.LOG_LEVEL as LogLevel) || defaultLevel;
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -70,29 +74,56 @@ class Logger {
   private emit(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
 
-    // In production, this would send to New Relic, Datadog, etc.
-    // For now, output structured JSON to stdout (captured by cloud providers)
+    const isDevelopment = this.environment === 'development';
+
+    // In production, only log errors and warnings to console
+    // In development, log everything
+    const shouldLogToConsole = isDevelopment || entry.level === 'error' || entry.level === 'warn';
+
     if (typeof window === 'undefined') {
-      // Server-side: JSON to stdout
-      console.log(JSON.stringify(entry));
+      // Server-side: JSON to stdout (always in production for log aggregation)
+      if (shouldLogToConsole || this.environment === 'production') {
+        console.log(JSON.stringify(entry));
+      }
     } else {
-      // Client-side: formatted for browser console
-      const style = this.getConsoleStyle(entry.level);
-      console.log(
-        `%c${entry.level.toUpperCase()}%c ${entry.message}`,
-        style,
-        'color: inherit',
-        entry.context
-      );
+      // Client-side: Only log to console in development
+      if (shouldLogToConsole) {
+        const style = this.getConsoleStyle(entry.level);
+        console.log(
+          `%c${entry.level.toUpperCase()}%c ${entry.message}`,
+          style,
+          'color: inherit',
+          entry.context
+        );
+      }
     }
 
-    // Send to New Relic Browser if available
+    // Always send to observability platform (New Relic, etc.)
     if (typeof window !== 'undefined' && (window as any).newrelic) {
       (window as any).newrelic.addPageAction('log', {
         level: entry.level,
         message: entry.message,
         ...entry.context,
       });
+    }
+
+    // Send to analytics/observability endpoint if available
+    if (typeof window !== 'undefined' && entry.level !== 'debug') {
+      // Fire and forget - don't block on analytics
+      try {
+        fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'log',
+            ...entry,
+          }),
+        }).catch(() => {
+          // Ignore analytics errors
+        });
+      } catch (e) {
+        // Ignore analytics errors
+      }
     }
   }
 

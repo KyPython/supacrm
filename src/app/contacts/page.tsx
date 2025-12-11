@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext.js";
 import { useForm, ErrorBanner, SuccessBanner } from "../../hooks/useForm";
 import { supabase } from "@/lib/supabase";
+import { useUsage } from "@/hooks/useUsage";
+import { checkLimitExceeded, incrementUsage, decrementUsage } from "@/lib/usage-tracking";
+import UpgradePrompt, { InlineUpgradePrompt } from "@/components/UpgradePrompt";
 
 type Contact = {
   id: string | number;
@@ -16,6 +19,7 @@ export default function ContactsPage() {
   const auth = useAuth() ?? {};
   // Intentionally not destructuring unused auth helpers here to avoid unused-var warnings
   const { user } = auth;
+  const { usageStatus, exceeded, plan } = useUsage();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -57,6 +61,16 @@ export default function ContactsPage() {
       setError("Email required");
       return;
     }
+    
+    // Check limit before creating
+    if (user?.id) {
+      const limitExceeded = await checkLimitExceeded(user.id, 'contacts');
+      if (limitExceeded) {
+        setError("Contact limit reached. Please upgrade your plan to add more contacts.");
+        return;
+      }
+    }
+    
     setContactsLoading(true);
     // Insert new contact directly into contacts table
     if (!supabase) return;
@@ -69,6 +83,10 @@ export default function ContactsPage() {
       .from("contacts")
       .insert({ first_name, last_name, email });
     if (!error) {
+      // Update usage tracking
+      if (user?.id) {
+        await incrementUsage(user.id, 'contacts', 1);
+      }
       setName("");
       setEmail("");
       setSuccess("Client added!");
@@ -84,8 +102,15 @@ export default function ContactsPage() {
     setError("");
     if (!supabase) return;
     const { error } = await supabase.from("contacts").delete().eq("id", id);
-    if (!error) fetchContacts();
-    else setError(error.message);
+    if (!error) {
+      // Update usage tracking
+      if (user?.id) {
+        await decrementUsage(user.id, 'contacts', 1);
+      }
+      fetchContacts();
+    } else {
+      setError(error.message);
+    }
     setContactsLoading(false);
   }
 
@@ -93,6 +118,14 @@ export default function ContactsPage() {
     <div className="app-container spaced">
       <div className="card">
         <h1 className="h1">Contacts</h1>
+        {exceeded?.contacts && usageStatus && (
+          <UpgradePrompt
+            feature="contacts"
+            currentCount={usageStatus.usage.contacts}
+            limit={usageStatus.limits.max_contacts || 0}
+            className="mb-4"
+          />
+        )}
         {error && (
           <div className="mb-3">
             <div className="alert alert-danger">{error}</div>

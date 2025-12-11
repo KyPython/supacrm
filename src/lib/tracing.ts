@@ -1,5 +1,5 @@
 // lib/tracing.ts - Distributed tracing support
-import { generateRequestId } from './logger';
+import { generateRequestId, logger } from './logger';
 
 export interface SpanContext {
   span_id: string;
@@ -83,19 +83,45 @@ class Span {
       });
     }
 
-    // Server-side: log as structured JSON
-    if (typeof window === 'undefined') {
-      console.log(JSON.stringify({
-        type: 'span',
-        name: this.name,
+    // Log span completion (development only for client, always for server)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const shouldLogToConsole = typeof window === 'undefined' || isDevelopment;
+    
+    if (shouldLogToConsole) {
+      logger.debug('Span completed', {
+        span_name: this.name,
         trace_id: this.context.trace_id,
         span_id: this.context.span_id,
         parent_span_id: this.context.parent_span_id,
         duration_ms: duration,
         status: this.status,
-        attributes: this.context.attributes,
-        events: this.events,
-      }));
+        ...this.context.attributes,
+      });
+    }
+
+    // Always send to observability endpoint (fire and forget)
+    if (typeof window !== 'undefined') {
+      try {
+        fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'span',
+            name: this.name,
+            trace_id: this.context.trace_id,
+            span_id: this.context.span_id,
+            parent_span_id: this.context.parent_span_id,
+            duration_ms: duration,
+            status: this.status,
+            attributes: this.context.attributes,
+            events: this.events,
+          }),
+        }).catch(() => {
+          // Ignore analytics errors
+        });
+      } catch (e) {
+        // Ignore analytics errors
+      }
     }
   }
 
