@@ -44,9 +44,10 @@ if (!url || !key) {
   // Log in both development and production build-time (but not in client runtime)
   // This helps diagnose Vercel build issues
   if (typeof window === 'undefined') {
-    logger.warn('Supabase API key or URL is missing at build time. Check your Vercel environment variables.');
-    logger.warn('NEXT_PUBLIC_SUPABASE_URL:', rawUrl ? 'SET (but may be empty)' : 'NOT SET');
-    logger.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY:', key ? 'SET (but may be empty)' : 'NOT SET');
+    logger.warn('Supabase API key or URL is missing at build time. Check your Vercel environment variables.', {
+      NEXT_PUBLIC_SUPABASE_URL: rawUrl ? 'SET (but may be empty)' : 'NOT SET',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: key ? 'SET (but may be empty)' : 'NOT SET'
+    });
   } else if (process.env.NODE_ENV === 'development') {
     logger.warn('Supabase API key or URL is missing. Check your .env.local file.');
   }
