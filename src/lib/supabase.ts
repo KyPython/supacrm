@@ -59,13 +59,25 @@ if (!url || !key) {
 export { supabase };
 
 // Only export supabaseAdmin in server-side environments
-export const supabaseAdmin: SupabaseClient =
-  typeof window === "undefined"
-    ? createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-  : (null as unknown as SupabaseClient);
+let supabaseAdminInstance: SupabaseClient | null = null;
+
+if (typeof window === "undefined") {
+  const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (adminUrl && adminKey) {
+    try {
+      supabaseAdminInstance = createClient(adminUrl, adminKey);
+    } catch (err) {
+      console.error("Failed to create Supabase admin client:", err);
+      supabaseAdminInstance = null;
+    }
+  } else {
+    console.warn("Supabase admin credentials missing. Admin client not available.");
+  }
+}
+
+export const supabaseAdmin: SupabaseClient | null = supabaseAdminInstance;
 
 // Ensure `window.supabase` exists (client-only). Provide explicit null when
 // env is missing so debugging checks in the browser are deterministic.
