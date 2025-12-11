@@ -1,5 +1,6 @@
 // lib/supabase.ts
 // Supabase client initialization with build-time environment variable validation
+// Updated: 2025-01-XX - Added placeholder URL detection
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from './logger';
 
