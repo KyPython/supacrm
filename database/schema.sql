@@ -1,169 +1,175 @@
--- Create this file: supacrm/database/schema.sql
--- Run this in your Supabase SQL Editor
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
--- Enable necessary extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- User roles enum
-CREATE TYPE user_role AS ENUM ('super_admin', 'admin', 'agent', 'user');
-
--- User profiles table (extends Supabase auth.users)
-CREATE TABLE public.user_profiles (
-    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    role user_role DEFAULT 'user' NOT NULL,
-    avatar_url TEXT,
-    phone TEXT,
-    company_name TEXT,
-    job_title TEXT,
-    is_active BOOLEAN DEFAULT true,
-    last_login TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Companies/Organizations
-CREATE TABLE public.companies (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name TEXT NOT NULL,
-    industry TEXT,
-    website TEXT,
-    phone TEXT,
-    email TEXT,
-    address TEXT,
-    city TEXT,
-    state TEXT,
-    country TEXT,
-    postal_code TEXT,
-    annual_revenue DECIMAL(15,2),
-    employee_count INTEGER,
-    description TEXT,
-    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'prospect')),
-    created_by UUID REFERENCES public.user_profiles(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Contacts (People within companies)
-CREATE TABLE public.contacts (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    email TEXT,
-    phone TEXT,
-    mobile TEXT,
-    job_title TEXT,
-    department TEXT,
-    is_primary BOOLEAN DEFAULT false,
-    notes TEXT,
-    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'lead')),
-    created_by UUID REFERENCES public.user_profiles(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Deals/Opportunities
-CREATE TABLE public.deals (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    title TEXT NOT NULL,
-    company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
-    contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
-    value DECIMAL(15,2),
-    currency TEXT DEFAULT 'USD',
-    stage TEXT DEFAULT 'lead' CHECK (stage IN ('lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost')),
-    probability INTEGER DEFAULT 0 CHECK (probability >= 0 AND probability <= 100),
-    expected_close_date DATE,
-    actual_close_date DATE,
-    description TEXT,
-    notes TEXT,
-    status TEXT DEFAULT 'open',
-    created_by UUID REFERENCES public.user_profiles(id),
-    assigned_to UUID REFERENCES public.user_profiles(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Tasks/Activities
-CREATE TABLE public.tasks (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT,
-    type TEXT DEFAULT 'task' CHECK (type IN ('task', 'call', 'email', 'meeting', 'note')),
-    priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
-    due_date TIMESTAMP WITH TIME ZONE,
-    completed_at TIMESTAMP WITH TIME ZONE,
-    company_id UUID REFERENCES public.companies(id) ON DELETE SET NULL,
-    contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
-    deal_id UUID REFERENCES public.deals(id) ON DELETE SET NULL,
-    assigned_to UUID REFERENCES public.user_profiles(id),
-    created_by UUID REFERENCES public.user_profiles(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Projects
-CREATE TABLE public.projects (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
-    status TEXT DEFAULT 'planning' CHECK (status IN ('planning', 'active', 'on_hold', 'completed', 'cancelled')),
-    start_date DATE,
-    end_date DATE,
-    budget DECIMAL(15,2),
-    progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
-    created_by UUID REFERENCES public.user_profiles(id),
-    assigned_to UUID REFERENCES public.user_profiles(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Files metadata
-CREATE TABLE public.files (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name TEXT NOT NULL,
-    original_name TEXT NOT NULL,
-    file_path TEXT NOT NULL,
-    file_size BIGINT NOT NULL,
-    mime_type TEXT NOT NULL,
-    bucket_name TEXT NOT NULL,
-    company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
-    contact_id UUID REFERENCES public.contacts(id) ON DELETE SET NULL,
-    deal_id UUID REFERENCES public.deals(id) ON DELETE SET NULL,
-    task_id UUID REFERENCES public.tasks(id) ON DELETE SET NULL,
-    uploaded_by UUID REFERENCES public.user_profiles(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Activity logs for audit trail
 CREATE TABLE public.activity_logs (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID REFERENCES public.user_profiles(id),
-    action TEXT NOT NULL,
-    table_name TEXT NOT NULL,
-    record_id UUID,
-    old_values JSONB,
-    new_values JSONB,
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  action text NOT NULL,
+  table_name text NOT NULL,
+  record_id uuid,
+  old_values jsonb,
+  new_values jsonb,
+  ip_address inet,
+  user_agent text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT activity_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT activity_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id)
 );
-
--- Create indexes and triggers (see full schema above)
-
--- User settings (per-user preferences)
-CREATE TABLE IF NOT EXISTS public.user_settings (
-    id UUID PRIMARY KEY REFERENCES public.user_profiles(id) ON DELETE CASCADE,
-    email_notifications BOOLEAN DEFAULT true,
-    sms_notifications BOOLEAN DEFAULT false,
-    weekly_reports BOOLEAN DEFAULT false,
-    session_timeout INTEGER DEFAULT 30, -- minutes
-    password_expiry INTEGER DEFAULT 90, -- days
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TABLE public.companies (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  industry text,
+  website text,
+  phone text,
+  email text,
+  address text,
+  city text,
+  state text,
+  country text,
+  postal_code text,
+  annual_revenue numeric,
+  employee_count integer,
+  description text,
+  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text, 'prospect'::text])),
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT companies_pkey PRIMARY KEY (id),
+  CONSTRAINT companies_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.contacts (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  company_id uuid,
+  first_name text NOT NULL,
+  last_name text NOT NULL,
+  email text,
+  phone text,
+  mobile text,
+  job_title text,
+  department text,
+  is_primary boolean DEFAULT false,
+  notes text,
+  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text, 'lead'::text])),
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT contacts_pkey PRIMARY KEY (id),
+  CONSTRAINT contacts_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT contacts_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.deals (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  title text NOT NULL,
+  company_id uuid,
+  contact_id uuid,
+  value numeric,
+  currency text DEFAULT 'USD'::text,
+  stage text DEFAULT 'lead'::text CHECK (stage = ANY (ARRAY['lead'::text, 'qualified'::text, 'proposal'::text, 'negotiation'::text, 'closed_won'::text, 'closed_lost'::text])),
+  probability integer DEFAULT 0 CHECK (probability >= 0 AND probability <= 100),
+  expected_close_date date,
+  actual_close_date date,
+  description text,
+  notes text,
+  status text DEFAULT 'open'::text,
+  created_by uuid,
+  assigned_to uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT deals_pkey PRIMARY KEY (id),
+  CONSTRAINT deals_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT deals_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id),
+  CONSTRAINT deals_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
+  CONSTRAINT deals_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.files (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  original_name text NOT NULL,
+  file_path text NOT NULL,
+  file_size bigint NOT NULL,
+  mime_type text NOT NULL,
+  bucket_name text NOT NULL,
+  company_id uuid,
+  contact_id uuid,
+  deal_id uuid,
+  task_id uuid,
+  uploaded_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT files_pkey PRIMARY KEY (id),
+  CONSTRAINT files_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT files_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id),
+  CONSTRAINT files_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.deals(id),
+  CONSTRAINT files_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id),
+  CONSTRAINT files_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.projects (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  description text,
+  company_id uuid,
+  status text DEFAULT 'planning'::text CHECK (status = ANY (ARRAY['planning'::text, 'active'::text, 'on_hold'::text, 'completed'::text, 'cancelled'::text])),
+  start_date date,
+  end_date date,
+  budget numeric,
+  progress integer DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
+  created_by uuid,
+  assigned_to uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT projects_pkey PRIMARY KEY (id),
+  CONSTRAINT projects_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT projects_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
+  CONSTRAINT projects_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.tasks (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  title text NOT NULL,
+  description text,
+  type text DEFAULT 'task'::text CHECK (type = ANY (ARRAY['task'::text, 'call'::text, 'email'::text, 'meeting'::text, 'note'::text])),
+  priority text DEFAULT 'medium'::text CHECK (priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])),
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'cancelled'::text])),
+  due_date timestamp with time zone,
+  completed_at timestamp with time zone,
+  company_id uuid,
+  contact_id uuid,
+  deal_id uuid,
+  assigned_to uuid,
+  created_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT tasks_pkey PRIMARY KEY (id),
+  CONSTRAINT tasks_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
+  CONSTRAINT tasks_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id),
+  CONSTRAINT tasks_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.deals(id),
+  CONSTRAINT tasks_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.user_profiles(id),
+  CONSTRAINT tasks_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
+);
+CREATE TABLE public.user_profiles (
+  id uuid NOT NULL,
+  email text NOT NULL UNIQUE,
+  first_name text NOT NULL,
+  last_name text NOT NULL,
+  role USER-DEFINED NOT NULL DEFAULT 'user'::user_role,
+  avatar_url text,
+  phone text,
+  company_name text,
+  job_title text,
+  is_active boolean DEFAULT true,
+  last_login timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_settings (
+  id uuid NOT NULL,
+  email_notifications boolean DEFAULT true,
+  sms_notifications boolean DEFAULT false,
+  weekly_reports boolean DEFAULT false,
+  session_timeout integer DEFAULT 30,
+  password_expiry integer DEFAULT 90,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_settings_pkey PRIMARY KEY (id),
+  CONSTRAINT user_settings_id_fkey FOREIGN KEY (id) REFERENCES public.user_profiles(id)
 );

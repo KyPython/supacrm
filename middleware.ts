@@ -1,7 +1,8 @@
+// middleware-enhanced.ts - Enhanced middleware with observability
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { generateRequestId } from './src/lib/logger';
 
-// Protected route patterns — adjust if your app uses different paths
 const PROTECTED_MATCHERS = [
   '/dashboard/:path*',
   '/contacts/:path*',
@@ -11,8 +12,6 @@ const PROTECTED_MATCHERS = [
   '/tasks/:path*',
 ];
 
-// Common cookie names used by Supabase/clients. If your setup writes a
-// different cookie name, add it here.
 const KNOWN_TOKEN_COOKIES = [
   'sb:token',
   'sb-access-token',
@@ -24,8 +23,17 @@ const KNOWN_TOKEN_COOKIES = [
 ];
 
 export function middleware(req: NextRequest) {
+  const startTime = Date.now();
+  const requestId = generateRequestId();
   const { pathname } = req.nextUrl;
 
+  // Create response with observability headers
+  const response = NextResponse.next();
+  
+  // Add correlation headers
+  response.headers.set('X-Request-ID', requestId);
+  response.headers.set('X-Response-Time', '0'); // Will be updated
+  
   // Allow next internals and public files through
   if (
     pathname.startsWith('/_next') ||
@@ -33,41 +41,93 @@ export function middleware(req: NextRequest) {
     pathname.startsWith('/api') ||
     pathname === '/favicon.ico'
   ) {
-    return NextResponse.next();
+    return response;
   }
 
-  // Only apply server-side redirect on configured protected routes
+  // Check if route is protected
   const isProtected = PROTECTED_MATCHERS.some((p) => {
-    // simple startsWith check for common pattern '/foo/:path*'
     const base = p.replace('/:path*', '');
     return pathname === base || pathname.startsWith(base + '/');
   });
 
-  if (!isProtected) return NextResponse.next();
+  if (!isProtected) {
+    const duration = Date.now() - startTime;
+    response.headers.set('X-Response-Time', duration.toString());
+    
+    // Log public route access
+    logMiddlewareEvent({
+      type: 'public_route_access',
+      request_id: requestId,
+      pathname,
+      duration_ms: duration,
+      user_agent: req.headers.get('user-agent') || 'unknown',
+    });
+    
+    return response;
+  }
 
-  // Look for any known auth cookie
+  // Check authentication
   const cookies = req.cookies;
   let hasAuth = false;
+  let authCookieName = '';
+  
   for (const name of KNOWN_TOKEN_COOKIES) {
     const c = cookies.get(name);
     if (c && c.value) {
       hasAuth = true;
+      authCookieName = name;
       break;
     }
   }
 
+  const duration = Date.now() - startTime;
+
   if (!hasAuth) {
-    // Server-side redirect to /login avoids client-side router/RSC races
+    // Log unauthorized access attempt
+    logMiddlewareEvent({
+      type: 'unauthorized_access',
+      request_id: requestId,
+      pathname,
+      duration_ms: duration,
+      user_agent: req.headers.get('user-agent') || 'unknown',
+      redirect_to: '/login',
+    });
+
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/login';
-    // preserve original path for optional post-login redirect
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  // Log successful authentication
+  logMiddlewareEvent({
+    type: 'authenticated_access',
+    request_id: requestId,
+    pathname,
+    duration_ms: duration,
+    auth_cookie: authCookieName,
+    user_agent: req.headers.get('user-agent') || 'unknown',
+  });
+
+  response.headers.set('X-Response-Time', duration.toString());
+  return response;
+}
+
+// Helper to log middleware events (structured JSON)
+function logMiddlewareEvent(event: Record<string, any>): void {
+  if (typeof window === 'undefined') {
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      service: 'supacrm-middleware',
+      environment: process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV,
+      ...event,
+    }));
+  }
 }
 
 export const config = {
-  matcher: PROTECTED_MATCHERS,
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 };

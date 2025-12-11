@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
+import { usePageTracking, useComponentObservability } from "../../hooks/useObservability";
 
 function DashboardContent() {
   const [counts, setCounts] = useState({
@@ -14,14 +15,20 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Add observability
+  const sessionId = usePageTracking();
+  const log = useComponentObservability('DashboardPage');
+
   useEffect(() => {
     async function fetchCounts() {
+      log.info('Loading dashboard data');
       setLoading(true);
       setError("");
       try {
         const tables = ["companies", "contacts", "deals", "tasks"];
         if (!supabase) {
           setError("Supabase client is not initialized.");
+          log.error('Supabase client not initialized', new Error('Supabase client is null'));
           return;
         }
         const results = await Promise.all(
@@ -38,13 +45,21 @@ function DashboardContent() {
           deals: results[2].count || 0,
           tasks: results[3].count || 0,
         });
+        log.info('Dashboard data loaded', { 
+          companies: results[0].count || 0,
+          contacts: results[1].count || 0,
+          deals: results[2].count || 0,
+          tasks: results[3].count || 0,
+        });
       } catch (err) {
-        setError("Failed to load dashboard data.");
+        const errorMessage = "Failed to load dashboard data.";
+        setError(errorMessage);
+        log.error('Failed to load dashboard data', err as Error);
       }
       setLoading(false);
     }
     fetchCounts();
-  }, []);
+  }, [log]);
 
   return (
     <div className="p-8 max-w-xl mx-auto">

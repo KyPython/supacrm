@@ -1,0 +1,142 @@
+name: Observability & Quality Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+      
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+      
+      - name: Upload Snyk results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+  observability-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for observability instrumentation
+        run: |
+          echo "Checking for logger imports..."
+          if ! grep -r "from '@/lib/logger'" src/ --include="*.ts" --include="*.tsx"; then
+            echo "⚠️ Warning: No logger imports found"
+          fi
+          
+          echo "Checking for tracing..."
+          if ! grep -r "from '@/lib/tracing'" src/ --include="*.ts" --include="*.tsx"; then
+            echo "⚠️ Warning: No tracing imports found"
+          fi
+          
+          echo "✅ Observability check completed"
+      
+      - name: Verify health endpoint exists
+        run: |
+          if [ ! -f "src/app/api/health/route.ts" ]; then
+            echo "❌ Health endpoint missing"
+            exit 1
+          fi
+          echo "✅ Health endpoint exists"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, security-scan, observability-check]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SERVICE_NAME: supacrm
+          NEXT_PUBLIC_ENV: ci
+          NEXT_PUBLIC_VERSION: ${{ github.sha }}
+      
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: .next
+          retention-days: 1
+
+  deployment-marker:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Record deployment in New Relic
+        if: ${{ secrets.NEW_RELIC_API_KEY != '' }}
+        run: |
+          curl -X POST "https://api.newrelic.com/v2/applications/${{ secrets.NEW_RELIC_APP_ID }}/deployments.json" \
+            -H "Api-Key:${{ secrets.NEW_RELIC_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "deployment": {
+                "revision": "${{ github.sha }}",
+                "changelog": "${{ github.event.head_commit.message }}",
+                "description": "Production deployment from GitHub Actions",
+                "user": "${{ github.actor }}"
+              }
+            }'
+      
+      - name: Deployment notification
+        run: |
+          echo "🚀 Deployment marker created"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Message: ${{ github.event.head_commit.message }}"
