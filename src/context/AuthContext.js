@@ -39,19 +39,49 @@ export function AuthProvider({ children }) {
   }, [loading, user, pathname, router]);
 
   useEffect(() => {
-    if (!supabase) {
+    // Try to get or create Supabase client
+    let client = supabase;
+    if (!client && typeof window !== 'undefined') {
+      // Try to get from window.supabase (set by AuthGate or supabase.ts)
+      const win = window as unknown as { supabase?: typeof supabase | null };
+      client = win.supabase ?? null;
+      
+      // If still null, try to create dynamically from env vars
+      if (!client) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (url && key) {
+          try {
+            // Dynamic import to avoid SSR issues
+            import('@supabase/supabase-js').then(({ createClient }) => {
+              const dynamicClient = createClient(url, key);
+              win.supabase = dynamicClient;
+              debug('[AuthProvider] Created Supabase client dynamically');
+              // Retry getting session with the new client
+              getInitialSessionWithClient(dynamicClient);
+            }).catch((e) => {
+              debugError('[AuthProvider] Failed to create Supabase client dynamically', e);
+            });
+          } catch (e) {
+            debugError('[AuthProvider] Failed to import Supabase client', e);
+          }
+        }
+      }
+    }
+    
+    if (!client) {
       debugError('[AuthProvider] Supabase not configured or invalid NEXT_PUBLIC_SUPABASE_URL');
       setLoading(false);
       setUser(null);
       return;
     }
-
-    const getInitialSession = async () => {
+    
+    const getInitialSessionWithClient = async (supabaseClient) => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         debug('[AuthProvider] initial session', session);
         if (session) {
-          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).maybeSingle();
+          const { data: profile, error: profileError } = await supabaseClient.from('user_profiles').select('*').eq('id', session.user.id).maybeSingle();
           if (profileError) debugWarn('[AuthProvider] profile fetch error (ignored):', profileError);
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 
@@ -70,13 +100,17 @@ export function AuthProvider({ children }) {
       }
     };
 
+    const getInitialSession = async () => {
+      return getInitialSessionWithClient(client);
+    };
+
     getInitialSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
       debug('[AuthProvider] auth state change', event, session);
       try {
         if (session) {
-          const { data: profile, error: profileError } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).maybeSingle();
+          const { data: profile, error: profileError } = await client.from('user_profiles').select('*').eq('id', session.user.id).maybeSingle();
           if (profileError) debugWarn('[AuthProvider] profile fetch error (ignored):', profileError);
           if (profile) setUser({ ...session.user, ...profile }); else setUser(session.user);
 
@@ -98,15 +132,56 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    if (!supabase) {
+    // Try to get or create Supabase client
+    let client = supabase;
+    if (!client && typeof window !== 'undefined') {
+      // Try to get from window.supabase (set by AuthGate or supabase.ts)
+      const win = window as unknown as { supabase?: typeof supabase | null };
+      client = win.supabase ?? null;
+      
+      // If still null, try to create dynamically from env vars
+      if (!client) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        debug('[AuthContext] Attempting dynamic client creation', { 
+          hasUrl: !!url, 
+          hasKey: !!key,
+          urlPreview: url ? url.substring(0, 30) + '...' : 'undefined'
+        });
+        if (url && key) {
+          try {
+            const { createClient } = await import('@supabase/supabase-js');
+            client = createClient(url, key);
+            win.supabase = client;
+            debug('[AuthContext] Created Supabase client dynamically for login');
+          } catch (e) {
+            debugError('[AuthContext] Failed to create Supabase client dynamically', e);
+            // Log the actual error details
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Dynamic client creation error:', e);
+              console.error('URL:', url);
+              console.error('Key present:', !!key);
+            }
+          }
+        } else {
+          debugError('[AuthContext] Cannot create client - missing env vars', { hasUrl: !!url, hasKey: !!key });
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Missing environment variables:', { url, key: key ? '***' : undefined });
+          }
+        }
+      }
+    }
+    
+    if (!client) {
       const errorMsg = 'Authentication service is temporarily unavailable. Please try again later.';
       if (process.env.NODE_ENV === 'development') {
         logger.error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
       }
       throw new Error(errorMsg);
     }
+    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
       if (error) throw error;
       return data;
     } catch (err) {
@@ -116,15 +191,40 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async (email, password) => {
-    if (!supabase) {
+    // Try to get or create Supabase client
+    let client = supabase;
+    if (!client && typeof window !== 'undefined') {
+      // Try to get from window.supabase (set by AuthGate or supabase.ts)
+      const win = window as unknown as { supabase?: typeof supabase | null };
+      client = win.supabase ?? null;
+      
+      // If still null, try to create dynamically from env vars
+      if (!client) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (url && key) {
+          try {
+            const { createClient } = await import('@supabase/supabase-js');
+            client = createClient(url, key);
+            win.supabase = client;
+            debug('[AuthContext] Created Supabase client dynamically for signup');
+          } catch (e) {
+            debugError('[AuthContext] Failed to create Supabase client dynamically', e);
+          }
+        }
+      }
+    }
+    
+    if (!client) {
       const errorMsg = 'Authentication service is temporarily unavailable. Please try again later.';
       if (process.env.NODE_ENV === 'development') {
         logger.error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
       }
       throw new Error(errorMsg);
     }
+    
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await client.auth.signUp({ email, password });
       if (error) throw error;
       return data;
     } catch (err) {
@@ -134,15 +234,40 @@ export function AuthProvider({ children }) {
   };
 
   const sendMagicLink = async (email) => {
-    if (!supabase) {
+    // Try to get or create Supabase client
+    let client = supabase;
+    if (!client && typeof window !== 'undefined') {
+      // Try to get from window.supabase (set by AuthGate or supabase.ts)
+      const win = window as unknown as { supabase?: typeof supabase | null };
+      client = win.supabase ?? null;
+      
+      // If still null, try to create dynamically from env vars
+      if (!client) {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (url && key) {
+          try {
+            const { createClient } = await import('@supabase/supabase-js');
+            client = createClient(url, key);
+            win.supabase = client;
+            debug('[AuthContext] Created Supabase client dynamically for magic link');
+          } catch (e) {
+            debugError('[AuthContext] Failed to create Supabase client dynamically', e);
+          }
+        }
+      }
+    }
+    
+    if (!client) {
       const errorMsg = 'Authentication service is temporarily unavailable. Please try again later.';
       if (process.env.NODE_ENV === 'development') {
         logger.error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
       }
       throw new Error(errorMsg);
     }
+    
     try {
-      const { data, error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback` } });
+      const { data, error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback` } });
       if (error) throw error;
       return data;
     } catch (err) {
@@ -153,7 +278,15 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      // Try to get client (same pattern as login/signup)
+      let client = supabase;
+      if (!client && typeof window !== 'undefined') {
+        const win = window as unknown as { supabase?: typeof supabase | null };
+        client = win.supabase ?? null;
+      }
+      if (client) {
+        await client.auth.signOut();
+      }
     } finally {
       try { router.replace('/'); } catch(e) { if (typeof window !== 'undefined') window.location.href = '/'; }
     }
