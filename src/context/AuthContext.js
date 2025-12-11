@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
     let client = supabase;
     if (!client && typeof window !== 'undefined') {
       // Try to get from window.supabase (set by AuthGate or supabase.ts)
-      const win = window as unknown as { supabase?: typeof supabase | null };
+      const win = window;
       client = win.supabase ?? null;
       
       // If still null, try to create dynamically from env vars
@@ -136,7 +136,7 @@ export function AuthProvider({ children }) {
     let client = supabase;
     if (!client && typeof window !== 'undefined') {
       // Try to get from window.supabase (set by AuthGate or supabase.ts)
-      const win = window as unknown as { supabase?: typeof supabase | null };
+      const win = window;
       client = win.supabase ?? null;
       
       // If still null, try to create dynamically from env vars
@@ -195,7 +195,7 @@ export function AuthProvider({ children }) {
     let client = supabase;
     if (!client && typeof window !== 'undefined') {
       // Try to get from window.supabase (set by AuthGate or supabase.ts)
-      const win = window as unknown as { supabase?: typeof supabase | null };
+      const win = window;
       client = win.supabase ?? null;
       
       // If still null, try to create dynamically from env vars
@@ -254,7 +254,7 @@ export function AuthProvider({ children }) {
     let client = supabase;
     if (!client && typeof window !== 'undefined') {
       // Try to get from window.supabase (set by AuthGate or supabase.ts)
-      const win = window as unknown as { supabase?: typeof supabase | null };
+      const win = window;
       client = win.supabase ?? null;
       
       // If still null, try to create dynamically from env vars
