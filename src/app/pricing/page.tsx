@@ -209,9 +209,12 @@ export default function PricingPage() {
               <div
                 key={plan.plan_type}
                 className={`relative ${isCurrentPlan ? 'ring-2' : ''}`}
-                style={{
-                  ringColor: isCurrentPlan ? 'var(--brand)' : 'transparent',
-                }}
+                style={isCurrentPlan ? {
+                  borderColor: 'var(--brand)',
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  borderRadius: 'var(--radius)',
+                } : {}}
               >
                 <Card>
                 {isCurrentPlan && (
