@@ -69,7 +69,7 @@ export function ObservabilityProvider({
                 connection_time: navEntry.connectEnd - navEntry.connectStart,
                 request_time: navEntry.responseStart - navEntry.requestStart,
                 response_time: navEntry.responseEnd - navEntry.responseStart,
-                dom_processing: navEntry.domComplete - navEntry.domLoading,
+                dom_processing: navEntry.domComplete - navEntry.domInteractive,
                 load_time: navEntry.loadEventEnd - navEntry.fetchStart,
               });
             }
