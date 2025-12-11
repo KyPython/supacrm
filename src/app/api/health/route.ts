@@ -8,6 +8,23 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const requestId = request.headers.get('x-request-id') || `req_${Date.now()}`;
 
+  // Check if this is a diagnostic request
+  const url = new URL(request.url);
+  const diagnostic = url.searchParams.get('diagnostic') === 'env';
+  
+  if (diagnostic) {
+    // Return environment variable status (safe - only shows if vars are set, not their values)
+    return NextResponse.json({
+      supabase_url_set: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabase_url_preview: process.env.NEXT_PUBLIC_SUPABASE_URL 
+        ? process.env.NEXT_PUBLIC_SUPABASE_URL.substring(0, 30) + '...' 
+        : 'NOT SET',
+      supabase_key_set: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      node_env: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
+  }
+
   try {
     // Check database connection
     const dbHealthy = await checkDatabase();
