@@ -55,10 +55,14 @@ if (!url || !key || isPlaceholderUrl) {
   // This helps diagnose Vercel build issues
   if (typeof window === 'undefined') {
     if (isPlaceholderUrl) {
-      logger.error('NEXT_PUBLIC_SUPABASE_URL appears to be a placeholder. Update it to your actual Supabase project URL (e.g., https://<project-id>.supabase.co)', {
-        current_value: rawUrl,
-        expected_format: 'https://<project-id>.supabase.co'
-      });
+      logger.error(
+        'NEXT_PUBLIC_SUPABASE_URL appears to be a placeholder. Update it to your actual Supabase project URL (e.g., https://<project-id>.supabase.co)',
+        undefined, // No Error object
+        {
+          current_value: rawUrl,
+          expected_format: 'https://<project-id>.supabase.co'
+        }
+      );
     } else {
       logger.warn('Supabase API key or URL is missing at build time. Check your Vercel environment variables.', {
         NEXT_PUBLIC_SUPABASE_URL: rawUrl ? 'SET (but may be empty)' : 'NOT SET',
