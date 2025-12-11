@@ -5,7 +5,6 @@ import React from 'react';
 import { useUsage } from '@/hooks/useUsage';
 import { usePricing } from '@/hooks/usePricing';
 import Button from './Button';
-import Card from './Card';
 import Link from 'next/link';
 
 interface UpgradePromptProps {
@@ -79,7 +78,7 @@ export default function UpgradePrompt({
   const displayName = nextPlanPricing?.display_name || nextPlanName.charAt(0).toUpperCase() + nextPlanName.slice(1);
 
   return (
-    <Card className={`mb-4 ${className}`} style={{ 
+    <div className={`card mb-4 ${className}`} style={{ 
       background: 'var(--brand-10)',
       border: '1px solid var(--brand-20)',
     }}>
@@ -127,7 +126,7 @@ export default function UpgradePrompt({
           ×
         </button>
       </div>
-    </Card>
+    </div>
   );
 }
 
