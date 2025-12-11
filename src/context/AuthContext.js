@@ -202,6 +202,11 @@ export function AuthProvider({ children }) {
       if (!client) {
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        debug('[AuthContext] Attempting dynamic client creation for signup', { 
+          hasUrl: !!url, 
+          hasKey: !!key,
+          urlPreview: url ? url.substring(0, 30) + '...' : 'undefined'
+        });
         if (url && key) {
           try {
             const { createClient } = await import('@supabase/supabase-js');
@@ -210,15 +215,26 @@ export function AuthProvider({ children }) {
             debug('[AuthContext] Created Supabase client dynamically for signup');
           } catch (e) {
             debugError('[AuthContext] Failed to create Supabase client dynamically', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Dynamic client creation error:', e);
+            }
           }
+        } else {
+          debugError('[AuthContext] Cannot create client for signup - missing env vars', { hasUrl: !!url, hasKey: !!key });
         }
       }
     }
     
     if (!client) {
       const errorMsg = 'Authentication service is temporarily unavailable. Please try again later.';
-      if (process.env.NODE_ENV === 'development') {
-        logger.error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        logger.error('Supabase client not available for signup', undefined, {
+          hasUrl: !!url,
+          hasKey: !!key,
+          urlPreview: url ? url.substring(0, 30) + '...' : 'undefined'
+        });
       }
       throw new Error(errorMsg);
     }
@@ -245,6 +261,11 @@ export function AuthProvider({ children }) {
       if (!client) {
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        debug('[AuthContext] Attempting dynamic client creation for magic link', { 
+          hasUrl: !!url, 
+          hasKey: !!key,
+          urlPreview: url ? url.substring(0, 30) + '...' : 'undefined'
+        });
         if (url && key) {
           try {
             const { createClient } = await import('@supabase/supabase-js');
@@ -253,15 +274,26 @@ export function AuthProvider({ children }) {
             debug('[AuthContext] Created Supabase client dynamically for magic link');
           } catch (e) {
             debugError('[AuthContext] Failed to create Supabase client dynamically', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Dynamic client creation error:', e);
+            }
           }
+        } else {
+          debugError('[AuthContext] Cannot create client for magic link - missing env vars', { hasUrl: !!url, hasKey: !!key });
         }
       }
     }
     
     if (!client) {
       const errorMsg = 'Authentication service is temporarily unavailable. Please try again later.';
-      if (process.env.NODE_ENV === 'development') {
-        logger.error('Supabase client not available. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      if (process.env.NODE_ENV === 'development' || typeof window === 'undefined') {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        logger.error('Supabase client not available for magic link', undefined, {
+          hasUrl: !!url,
+          hasKey: !!key,
+          urlPreview: url ? url.substring(0, 30) + '...' : 'undefined'
+        });
       }
       throw new Error(errorMsg);
     }
