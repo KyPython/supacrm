@@ -40,14 +40,30 @@ function isValidPublicSupabaseUrl(u?: string | null) {
   }
 }
 
-if (!url || !key) {
+// Check for placeholder/invalid URL
+const isPlaceholderUrl = rawUrl && (
+  rawUrl.includes('your-project') || 
+  rawUrl.includes('placeholder') ||
+  rawUrl === 'https://your-project.supabase.co' ||
+  !rawUrl.startsWith('https://') ||
+  !rawUrl.includes('.supabase.co')
+);
+
+if (!url || !key || isPlaceholderUrl) {
   // Log in both development and production build-time (but not in client runtime)
   // This helps diagnose Vercel build issues
   if (typeof window === 'undefined') {
-    logger.warn('Supabase API key or URL is missing at build time. Check your Vercel environment variables.', {
-      NEXT_PUBLIC_SUPABASE_URL: rawUrl ? 'SET (but may be empty)' : 'NOT SET',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: key ? 'SET (but may be empty)' : 'NOT SET'
-    });
+    if (isPlaceholderUrl) {
+      logger.error('NEXT_PUBLIC_SUPABASE_URL appears to be a placeholder. Update it to your actual Supabase project URL (e.g., https://<project-id>.supabase.co)', {
+        current_value: rawUrl,
+        expected_format: 'https://<project-id>.supabase.co'
+      });
+    } else {
+      logger.warn('Supabase API key or URL is missing at build time. Check your Vercel environment variables.', {
+        NEXT_PUBLIC_SUPABASE_URL: rawUrl ? 'SET (but may be empty)' : 'NOT SET',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: key ? 'SET (but may be empty)' : 'NOT SET'
+      });
+    }
   } else if (process.env.NODE_ENV === 'development') {
     logger.warn('Supabase API key or URL is missing. Check your .env.local file.');
   }
