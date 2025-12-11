@@ -9,10 +9,11 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 
 function SignUpContent() {
-  // Check Supabase config
+  // Check Supabase config (only in development)
   const supabaseConfigMissing =
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NODE_ENV === 'development' &&
+    (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
+     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,13 +63,6 @@ function SignUpContent() {
     <Container>
       <Card>
         <h2 className="h2 center">Create an account</h2>
-
-        {supabaseConfigMissing && (
-          <div className="mb-4 alert alert-danger">
-            Supabase API key or URL is missing. Please check your .env.local
-            file.
-          </div>
-        )}
 
         {error && <div className="mb-4 alert alert-danger">{error}</div>}
 

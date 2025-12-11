@@ -19,10 +19,11 @@ function LoginForm() {
     login: (email: string, password: string) => Promise<unknown>;
     sendMagicLink: (email: string) => Promise<unknown>;
   };
-  // Check Supabase config
+  // Check Supabase config (only in development)
   const supabaseConfigMissing =
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NODE_ENV === 'development' &&
+    (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
+     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   const handleEmailPasswordLogin = async (
     e: React.FormEvent<HTMLFormElement>
@@ -97,13 +98,6 @@ function LoginForm() {
     <Container>
       <Card>
         <h2 className="h2 center">Log in to SupaCRM</h2>
-
-        {supabaseConfigMissing && (
-          <div className="mb-4 alert alert-danger">
-            Supabase API key or URL is missing. Please check your .env.local
-            file.
-          </div>
-        )}
 
         {error && <div className="mb-4 alert alert-danger">{error}</div>}
 

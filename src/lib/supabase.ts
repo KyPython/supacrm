@@ -41,7 +41,10 @@ function isValidPublicSupabaseUrl(u?: string | null) {
 }
 
 if (!url || !key) {
-  logger.warn('Supabase API key or URL is missing. Check your .env.local file.');
+  // Only log in development - don't expose config issues to production users
+  if (process.env.NODE_ENV === 'development') {
+    logger.warn('Supabase API key or URL is missing. Check your .env.local file.');
+  }
 } else {
   try {
     // Try to create the client with the sanitized URL. If the sanitized URL
