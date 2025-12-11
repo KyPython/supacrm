@@ -313,7 +313,7 @@ export function AuthProvider({ children }) {
       // Try to get client (same pattern as login/signup)
       let client = supabase;
       if (!client && typeof window !== 'undefined') {
-        const win = window as unknown as { supabase?: typeof supabase | null };
+        const win = window;
         client = win.supabase ?? null;
       }
       if (client) {
