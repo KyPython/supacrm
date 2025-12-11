@@ -8,7 +8,7 @@ import { metrics, timed } from '../lib/metrics';
 // Track page views and user sessions
 export function usePageTracking(userId?: string) {
   const pathname = usePathname();
-  const sessionIdRef = useRef<string>();
+  const sessionIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!sessionIdRef.current) {
@@ -190,7 +190,7 @@ export function useObservableAPI() {
 
 // Track component lifecycle and performance
 export function useComponentObservability(componentName: string) {
-  const mountTimeRef = useRef<number>();
+  const mountTimeRef = useRef<number | undefined>(undefined);
   const log = useRef(createContextLogger({ component: componentName }));
 
   useEffect(() => {
