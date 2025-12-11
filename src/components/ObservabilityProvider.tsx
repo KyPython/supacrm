@@ -59,7 +59,7 @@ export function ObservabilityProvider({
       });
 
       // Track performance metrics
-      if (window.performance && window.performance.getEntriesByType) {
+      if (window.performance && typeof window.performance.getEntriesByType === 'function') {
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             if (entry.entryType === 'navigation') {
