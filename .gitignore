@@ -23,6 +23,12 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
 
 # debug
 npm-debug.log*
@@ -40,6 +46,33 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env.local
+
+# database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# SQL dumps and backups (keep schema.sql and migration files)
+*.sql.dump
+*.sql.bak
+*.sql.backup
+*.dump
+*.bak
+*.backup
+database/*.dump
+database/*.bak
+database/*.backup
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc
