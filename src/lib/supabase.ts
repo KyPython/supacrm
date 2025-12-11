@@ -87,12 +87,18 @@ export const supabaseAdmin: SupabaseClient | null = supabaseAdminInstance;
 if (typeof window !== 'undefined') {
   try {
     if (!url || !key) {
-      logger.warn('NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Setting window.supabase = null for clarity.');
+      // Only log in development - don't expose config issues to production users
+      if (process.env.NODE_ENV === 'development') {
+        logger.warn('NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is missing. Setting window.supabase = null for clarity.');
+      }
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else if (!supabase) {
       // If we failed to create the client above, surface a single warning and
       // avoid attempting to create it again here (prevents duplicate errors).
-      logger.warn('Supabase client not available at runtime; check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      // Only log in development - don't expose config issues to production users
+      if (process.env.NODE_ENV === 'development') {
+        logger.warn('Supabase client not available at runtime; check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      }
       (window as unknown as { supabase: SupabaseClient | null }).supabase = null;
     } else {
       // Client exists; attach it and emit a masked host diagnostic once (development only)

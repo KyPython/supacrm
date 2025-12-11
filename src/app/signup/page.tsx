@@ -9,11 +9,8 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 
 function SignUpContent() {
-  // Check Supabase config (only in development)
-  const supabaseConfigMissing =
-    process.env.NODE_ENV === 'development' &&
-    (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
-     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // Supabase config is handled in lib/supabase.ts
+  // No need to check here - the client will be null if config is missing
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -106,7 +103,7 @@ function SignUpContent() {
 
           <Button
             type="submit"
-            disabled={loading || supabaseConfigMissing}
+            disabled={loading}
             variant="primary"
             className="w-full"
           >

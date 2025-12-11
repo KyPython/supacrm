@@ -19,11 +19,8 @@ function LoginForm() {
     login: (email: string, password: string) => Promise<unknown>;
     sendMagicLink: (email: string) => Promise<unknown>;
   };
-  // Check Supabase config (only in development)
-  const supabaseConfigMissing =
-    process.env.NODE_ENV === 'development' &&
-    (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
-     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // Supabase config is handled in lib/supabase.ts
+  // No need to check here - the client will be null if config is missing
 
   const handleEmailPasswordLogin = async (
     e: React.FormEvent<HTMLFormElement>
@@ -140,7 +137,7 @@ function LoginForm() {
 
           <Button
             type="submit"
-            disabled={loading || supabaseConfigMissing}
+            disabled={loading}
             variant="primary"
             className="w-full"
           >
@@ -154,7 +151,7 @@ function LoginForm() {
 
         <Button
           onClick={handleMagicLinkLogin}
-          disabled={loading || supabaseConfigMissing}
+          disabled={loading}
           variant="secondary"
           className="w-full mb-4"
         >
