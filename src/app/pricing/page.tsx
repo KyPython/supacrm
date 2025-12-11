@@ -206,13 +206,14 @@ export default function PricingPage() {
               : null;
 
             return (
-              <Card
+              <div
                 key={plan.plan_type}
                 className={`relative ${isCurrentPlan ? 'ring-2' : ''}`}
                 style={{
                   ringColor: isCurrentPlan ? 'var(--brand)' : 'transparent',
                 }}
               >
+                <Card>
                 {isCurrentPlan && (
                   <div
                     className="absolute top-0 right-0 px-3 py-1 rounded-bl-lg text-xs font-semibold"
@@ -319,7 +320,8 @@ export default function PricingPage() {
                     </CheckoutButton>
                   )}
                 </div>
-              </Card>
+                </Card>
+              </div>
             );
           })}
         </div>
