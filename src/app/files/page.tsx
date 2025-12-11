@@ -66,7 +66,7 @@ export default function FileUploadPage() {
       return;
     }
     if (!supabase) {
-      setGeneralError("Supabase client not available.");
+      setGeneralError("Service temporarily unavailable. Please try again later.");
       form.setLoading(false);
       return;
     }
@@ -147,7 +147,7 @@ export default function FileUploadPage() {
       return;
     }
     if (!supabase) {
-      setGeneralError("Supabase client not available.");
+      setGeneralError("Service temporarily unavailable. Please try again later.");
       return;
     }
     const { data, error } = await supabase.storage

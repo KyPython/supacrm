@@ -30,7 +30,12 @@ export async function saveNotificationsHandler(opts: {
     return { ok: true };
   }
 
-  if (!supabase) throw new Error("Supabase client not available");
+  if (!supabase) {
+    if (process.env.NODE_ENV === 'development') {
+      logger.error('Supabase client not available');
+    }
+    throw new Error("Service temporarily unavailable. Please try again later.");
+  }
 
   const payload = {
     id,
