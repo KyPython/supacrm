@@ -156,7 +156,7 @@ async function handleSubscriptionUpdate(subscription: any) {
     if (updateError) {
       logger.error('Failed to update subscription', updateError as Error, { 
         subscription_id,
-        organization_id 
+        organization_id: organizationId 
       });
     } else {
       logger.debug('Subscription updated successfully', { 
