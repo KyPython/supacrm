@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Button variants ghost anchor renders as link 1`] = `
+<div>
+  <a
+    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md"
+    href="/test"
+  >
+    <span>
+      Link
+    </span>
+  </a>
+</div>
+`;
+
+exports[`Button variants left and right icons render 1`] = `
+<div>
+  <button
+    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 hover:shadow-md"
+  >
+    <span
+      aria-hidden="true"
+      class="btn-icon"
+    >
+      <svg
+        aria-hidden="true"
+        fill="none"
+        height="1em"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 4v16m8-8H4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </span>
+    <span>
+      WithIcons
+    </span>
+    <span
+      aria-hidden="true"
+      class="btn-icon"
+    >
+      <span>
+        R
+      </span>
+    </span>
+  </button>
+</div>
+`;
