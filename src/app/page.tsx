@@ -302,7 +302,7 @@ export default function Page() {
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">
+                <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--fg)" }}>
                   Welcome, {user?.first_name || user?.email || "User"}!
                 </h1>
                 <p className="mb-4">
@@ -333,7 +333,7 @@ export default function Page() {
                 className="p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
                 style={{ background: "var(--brand-10)" }}
               >
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg" style={{ color: "var(--fg)" }}>
                   <BusinessIcon
                     className="inline-block mr-2"
                     style={{ color: "var(--brand)" }}
@@ -342,6 +342,7 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
+                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--brand)" }}
                 >
                   {stats.companies}
@@ -355,7 +356,7 @@ export default function Page() {
                 className="p-4 rounded shadow text-center hover:shadow-md transition-shadow"
                 style={{ background: "var(--success-10)" }}
               >
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg" style={{ color: "var(--fg)" }}>
                   <PeopleIcon
                     className="inline-block mr-2"
                     style={{ color: "var(--success)" }}
@@ -364,6 +365,7 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
+                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--success-600)" }}
                 >
                   {stats.contacts}
@@ -379,7 +381,7 @@ export default function Page() {
                   <button
                     className="text-sm"
                     style={{
-                      color: "white",
+                      color: "var(--fg)",
                       background: "var(--success)",
                       padding: "0.25rem 0.5rem",
                       borderRadius: 6,
@@ -396,7 +398,7 @@ export default function Page() {
                 className="p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
                 style={{ background: "var(--warning-10)" }}
               >
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg" style={{ color: "var(--fg)" }}>
                   <LocalOfferIcon
                     className="inline-block mr-2"
                     style={{ color: "var(--warning)" }}
@@ -405,6 +407,7 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
+                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--warning-600)" }}
                 >
                   {stats.deals}
@@ -421,7 +424,7 @@ export default function Page() {
                 className="p-4 rounded shadow text-center hover:shadow-md transition-shadow"
                 style={{ background: "var(--indigo-10)" }}
               >
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg" style={{ color: "var(--fg)" }}>
                   <FolderIcon
                     className="inline-block mr-2"
                     style={{ color: "var(--indigo)" }}
@@ -430,6 +433,7 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
+                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--indigo-600)" }}
                 >
                   {stats.files}
@@ -445,7 +449,7 @@ export default function Page() {
                   <button
                     className="text-sm"
                     style={{
-                      color: "white",
+                      color: "var(--fg)",
                       background: "var(--indigo)",
                       padding: "0.25rem 0.5rem",
                       borderRadius: 6,
@@ -462,7 +466,7 @@ export default function Page() {
                 className="p-4 rounded shadow text-center hover:shadow-md transition-shadow block"
                 style={{ background: "var(--purple-10)" }}
               >
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg" style={{ color: "var(--fg)" }}>
                   <TaskIcon
                     className="inline-block mr-2"
                     style={{ color: "var(--purple-600)" }}
@@ -471,6 +475,7 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
+                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--purple-600)" }}
                 >
                   {stats.tasks}
@@ -490,60 +495,61 @@ export default function Page() {
         {showNewContact && (
           <ModalWrapper onClose={() => setShowNewContact(false)}>
             <div className="rounded shadow p-6 w-full max-w-md" style={{ background: 'var(--card)' }}>
-              <h3 className="text-lg font-semibold mb-2">New contact</h3>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--fg)" }}>New contact</h3>
 
-              <label className="block text-sm">Name</label>
+              <label className="block text-sm" style={{ color: "var(--fg)" }}>Name</label>
               <input
                 value={contactForm.name}
                 onChange={(e) =>
                   setContactForm((s) => ({ ...s, name: e.target.value }))
                 }
-                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+                className="mt-1 mb-3 w-full border rounded px-3 py-2 form-input"
               />
               {contactErrors.name && (
-                <div className="text-red-600 text-sm">{contactErrors.name}</div>
+                <div className="text-sm" style={{ color: "var(--danger-600)" }}>{contactErrors.name}</div>
               )}
 
-              <label className="block text-sm">Email</label>
+              <label className="block text-sm" style={{ color: "var(--fg)" }}>Email</label>
               <input
                 value={contactForm.email}
                 onChange={(e) =>
                   setContactForm((s) => ({ ...s, email: e.target.value }))
                 }
-                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+                className="mt-1 mb-3 w-full border rounded px-3 py-2 form-input"
               />
               {contactErrors.email && (
-                <div className="text-red-600 text-sm">
+                <div className="text-sm" style={{ color: "var(--danger-600)" }}>
                   {contactErrors.email}
                 </div>
               )}
 
-              <label className="block text-sm">Phone</label>
+              <label className="block text-sm" style={{ color: "var(--fg)" }}>Phone</label>
               <input
                 value={contactForm.phone}
                 onChange={(e) =>
                   setContactForm((s) => ({ ...s, phone: e.target.value }))
                 }
-                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+                className="mt-1 mb-3 w-full border rounded px-3 py-2 form-input"
               />
               {contactErrors.phone && (
-                <div className="text-red-600 text-sm">
+                <div className="text-sm" style={{ color: "var(--danger-600)" }}>
                   {contactErrors.phone}
                 </div>
               )}
 
-              <label className="block text-sm">Company</label>
+              <label className="block text-sm" style={{ color: "var(--fg)" }}>Company</label>
               <input
                 value={contactForm.company}
                 onChange={(e) =>
                   setContactForm((s) => ({ ...s, company: e.target.value }))
                 }
-                className="mt-1 mb-3 w-full border rounded px-3 py-2"
+                className="mt-1 mb-3 w-full border rounded px-3 py-2 form-input"
               />
 
               <div className="flex justify-end gap-2">
                 <button
                   className="px-3 py-1"
+                  style={{ color: "var(--fg)" }}
                   onClick={() => setShowNewContact(false)}
                 >
                   Cancel
@@ -564,12 +570,12 @@ export default function Page() {
         {showUploadFile && (
           <ModalWrapper onClose={() => setShowUploadFile(false)}>
             <div className="rounded shadow p-6 w-full max-w-md" style={{ background: 'var(--card)' }}>
-              <h3 className="text-lg font-semibold mb-2">Upload file</h3>
-              <label className="block text-sm">File</label>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--fg)" }}>Upload file</h3>
+              <label className="block text-sm" style={{ color: "var(--fg)" }}>File</label>
               <input
                 type="file"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                className="mt-1 mb-3 w-full"
+                className="mt-1 mb-3 w-full form-input"
               />
 
               {uploadProgress > 0 && (
@@ -584,6 +590,7 @@ export default function Page() {
               <div className="flex justify-end gap-2">
                 <button
                   className="px-3 py-1"
+                  style={{ color: "var(--fg)" }}
                   onClick={() => setShowUploadFile(false)}
                 >
                   Cancel
