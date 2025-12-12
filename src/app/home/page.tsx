@@ -566,7 +566,8 @@ export default function Page() {
                   Cancel
                 </button>
                 <button
-                  className="px-3 py-1 bg-green-600 text-white rounded"
+                  className="px-3 py-1 rounded"
+                  style={{ background: 'var(--success)', color: 'var(--fg)' }}
                   onClick={handleCreateContact}
                 >
                   {creating ? "Creating..." : "Create"}
@@ -591,8 +592,8 @@ export default function Page() {
               {uploadProgress > 0 && (
                 <div className="w-full rounded overflow-hidden mb-3" style={{ background: 'var(--surface-10)' }}>
                   <div
-                    style={{ width: `${uploadProgress}%` }}
-                    className="h-2 bg-teal-500"
+                    style={{ width: `${uploadProgress}%`, background: 'var(--brand)' }}
+                    className="h-2"
                   />
                 </div>
               )}
@@ -605,7 +606,8 @@ export default function Page() {
                   Cancel
                 </button>
                 <button
-                  className="px-3 py-1 bg-indigo-600 text-white rounded"
+                  className="px-3 py-1 rounded"
+                  style={{ background: 'var(--indigo)', color: 'var(--fg)' }}
                   onClick={handleFileUpload}
                 >
                   {creating ? "Uploading..." : "Upload"}
