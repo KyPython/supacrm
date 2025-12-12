@@ -1,6 +1,16 @@
-# SupaCRM - Enterprise SaaS CRM with Production Observability
+# SupaCRM - Developer-First CRM for Modern Teams
 
-**SupaCRM** is a production-ready, secure, multi-role SaaS Customer Relationship Management (CRM) application built with Next.js 15, React 18, and Supabase. Features enterprise-grade observability, distributed tracing, and comprehensive monitoring.
+**SupaCRM** is a modern, developer-friendly CRM built with Next.js 15, React 18, and Supabase. The modern alternative to legacy CRMs like Salesforce and HubSpot, offering 20-40% lower cost, real-time collaboration, PostgreSQL power, and full API access—even in the free tier.
+
+**Key Differentiators:**
+- 🚀 **API access in free tier** (competitors paywall this)
+- ⚡ **10-100x faster queries** with PostgreSQL vs legacy databases
+- 🔧 **TypeScript SDK & direct PostgreSQL access** for developers
+- 💰 **20-40% cheaper** than Salesforce/HubSpot at Professional/Business tiers
+- 🆓 **Generous free tier**: 3 users, 10K contacts (vs 2 users, 250-5K for competitors)
+- 🔒 **2FA security & command palette (⌘K)** in all tiers
+- 🌐 **Real-time collaboration** with Supabase subscriptions
+- 📦 **Optional self-hosting** - no vendor lock-in
 
 ## 🎯 Key Features
 

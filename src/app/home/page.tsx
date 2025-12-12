@@ -247,7 +247,7 @@ export default function Page() {
           SupaCRM
         </h2>
         <p className="mb-2" style={{ color: "white" }}>
-          Secure Multi-Role SaaS
+          Developer-First CRM
         </p>
         <ul className="flex flex-col gap-2">
           <li>

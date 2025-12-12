@@ -151,9 +151,12 @@ export default function PricingPage() {
     <Container>
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="h1 mb-4">Choose Your Plan</h1>
-          <p className="text-lg" style={{ color: 'var(--muted)' }}>
-            All plans include core CRM features. Upgrade anytime.
+          <h1 className="h1 mb-4">Simple, Transparent Pricing</h1>
+          <p className="text-lg mb-2" style={{ color: 'var(--muted)' }}>
+            20-40% lower cost than Salesforce or HubSpot. No hidden fees. Upgrade or downgrade anytime.
+          </p>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>
+            All plans include API access, TypeScript SDK, 2FA security, and command palette (⌘K)
           </p>
         </div>
 
