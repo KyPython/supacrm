@@ -4,12 +4,12 @@ import Button from "@/components/Button";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
       <header className="w-full border-b" style={{ background: "var(--bg)" }}>
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-2xl font-bold">SupaCRM</div>
-            <div className="text-sm text-muted">Developer-First CRM</div>
+            <div className="text-sm" style={{ color: 'var(--muted)' }}>Developer-First CRM</div>
           </div>
           <nav className="flex items-center gap-3">
             <Link
@@ -33,7 +33,7 @@ export default function Landing() {
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
               Developer-First CRM for Modern Teams
             </h1>
-            <p className="text-xl text-muted mb-4">
+            <p className="text-xl mb-4" style={{ color: 'var(--muted)' }}>
               The modern alternative to legacy CRMs. Built on Supabase with real-time sync, PostgreSQL power, and 20-40% lower cost than Salesforce or HubSpot.
             </p>
             <div className="mb-6 space-y-2">
@@ -62,7 +62,7 @@ export default function Landing() {
                 View pricing
               </Button>
             </div>
-            <p className="mt-6 text-sm text-muted">
+            <p className="mt-6 text-sm" style={{ color: 'var(--muted)' }}>
               No credit card required • Free forever plan available • Built on Supabase
             </p>
           </section>
@@ -74,7 +74,7 @@ export default function Landing() {
                 style={{ background: "var(--card)", borderColor: "var(--brand-20)" }}
               >
                 <h3 className="font-semibold text-lg mb-2">🚀 Why SupaCRM?</h3>
-                <p className="text-sm text-muted mb-3">
+                <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
                   <strong>10-100x faster queries</strong> with PostgreSQL vs legacy databases. Real-time collaboration with Supabase subscriptions. Full database access, webhooks, and optional self-hosting.
                 </p>
                 <p className="text-xs" style={{ color: "var(--brand)" }}>
@@ -86,7 +86,7 @@ export default function Landing() {
                 style={{ background: "var(--card)", borderColor: "var(--success-20)" }}
               >
                 <h3 className="font-semibold text-lg mb-2">💼 Complete CRM Suite</h3>
-                <p className="text-sm text-muted mb-3">
+                <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
                   Manage companies, contacts, deals, files, and tasks with role-based access. Track pipelines, automate workflows, and close deals faster.
                 </p>
                 <p className="text-xs" style={{ color: "var(--success)" }}>
@@ -98,7 +98,7 @@ export default function Landing() {
                 style={{ background: "var(--card)", borderColor: "var(--warning-20)" }}
               >
                 <h3 className="font-semibold text-lg mb-2">⚡ Modern Developer Experience</h3>
-                <p className="text-sm text-muted mb-3">
+                <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
                   TypeScript SDK, command palette (⌘K), dark mode, keyboard shortcuts. Built for teams who value speed, transparency, and control.
                 </p>
                 <p className="text-xs" style={{ color: "var(--warning)" }}>
@@ -116,17 +116,17 @@ export default function Landing() {
               <div className="p-6 rounded-lg" style={{ background: "var(--card)" }}>
                 <div className="text-3xl font-bold mb-2" style={{ color: "var(--brand)" }}>$0</div>
                 <div className="text-sm font-semibold mb-2">Free Forever</div>
-                <div className="text-xs text-muted">3 users • 10K contacts • API access</div>
+                <div className="text-xs" style={{ color: 'var(--muted)' }}>3 users • 10K contacts • API access</div>
               </div>
               <div className="p-6 rounded-lg" style={{ background: "var(--card)" }}>
                 <div className="text-3xl font-bold mb-2" style={{ color: "var(--brand)" }}>$19</div>
                 <div className="text-sm font-semibold mb-2">Starter /user/month</div>
-                <div className="text-xs text-muted">vs $35-90 for competitors</div>
+                <div className="text-xs" style={{ color: 'var(--muted)' }}>vs $35-90 for competitors</div>
               </div>
               <div className="p-6 rounded-lg" style={{ background: "var(--card)" }}>
                 <div className="text-3xl font-bold mb-2" style={{ color: "var(--brand)" }}>$49</div>
                 <div className="text-sm font-semibold mb-2">Professional /user/month</div>
-                <div className="text-xs text-muted">vs $90-150 for Salesforce/HubSpot</div>
+                <div className="text-xs" style={{ color: 'var(--muted)' }}>vs $90-150 for Salesforce/HubSpot</div>
               </div>
             </div>
             <div className="mt-8">
@@ -142,7 +142,7 @@ export default function Landing() {
         className="w-full border-t py-6"
         style={{ background: "var(--bg)" }}
       >
-        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted">
+          <div className="max-w-6xl mx-auto px-6 text-center text-sm" style={{ color: 'var(--muted)' }}>
           © {new Date().getFullYear()} SupaCRM — Built with Supabase
         </div>
       </footer>
