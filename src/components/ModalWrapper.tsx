@@ -71,6 +71,7 @@ export default function ModalWrapper({
       aria-modal="true"
       className="fixed inset-0 flex items-center justify-center p-4 z-50"
       style={{ background: "rgba(0,0,0,0.5)" }}
+      // Note: Modal backdrop uses fixed rgba for consistent overlay in both themes
       onMouseDown={(e) => {
         // clicking backdrop closes
         if (e.target === e.currentTarget) onClose?.();

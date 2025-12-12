@@ -59,6 +59,9 @@ html[data-theme="light"] {
   --surface-20: rgba(2,6,23,0.04);
   --surface: #ffffff;
   --card: #f8fafc;
+  --success: #10b981;
+  --success-10: rgba(16,185,129,0.06);
+  --success-600: #059669;
   --danger-100: #fee2e2;
   --danger-600: #991b1b;
 }
@@ -75,6 +78,9 @@ html[data-theme="dark"] {
   --surface-20: rgba(230,238,243,0.04);
   --surface: #04101a;
   --card: #06202a;
+  --success: #10b981;
+  --success-10: rgba(16,185,129,0.2);
+  --success-600: #6ee7b7;
   --danger-100: rgba(153,27,27,0.2);
   --danger-600: #fca5a5;
 }

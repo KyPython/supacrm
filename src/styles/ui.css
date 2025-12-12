@@ -22,7 +22,7 @@
 .alert { padding: 0.75rem; border-radius: 8px; border: 1px solid transparent; }
 .alert-info { background: var(--surface-10); color: var(--fg); border-color: var(--surface-20); }
 .alert-danger { background: var(--danger-100); color: var(--danger-600); border-color: rgba(153,27,27,0.06); }
-.alert-success { background: rgba(220,253,231,0.9); color: #065f46; border-color: rgba(6,95,70,0.06); }
+.alert-success { background: var(--success-10); color: var(--success-600); border-color: rgba(6,95,70,0.06); }
 
 /* Dark mode alert fixes */
 html[data-theme="dark"] .alert-danger {
@@ -31,8 +31,8 @@ html[data-theme="dark"] .alert-danger {
   border-color: rgba(153,27,27,0.3);
 }
 html[data-theme="dark"] .alert-success {
-  background: rgba(6,95,70,0.2);
-  color: #6ee7b7;
+  background: var(--success-10);
+  color: var(--success-600);
   border-color: rgba(6,95,70,0.3);
 }
 @media (prefers-color-scheme: dark) {
@@ -42,8 +42,8 @@ html[data-theme="dark"] .alert-success {
     border-color: rgba(153,27,27,0.3);
   }
   .alert-success {
-    background: rgba(6,95,70,0.2);
-    color: #6ee7b7;
+    background: var(--success-10);
+    color: var(--success-600);
     border-color: rgba(6,95,70,0.3);
   }
 }
