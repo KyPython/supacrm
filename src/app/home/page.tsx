@@ -359,7 +359,6 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
-                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--brand)" }}
                 >
                   {stats.companies}
