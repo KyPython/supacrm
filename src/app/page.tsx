@@ -489,7 +489,7 @@ export default function Page() {
         {/* New Contact Modal */}
         {showNewContact && (
           <ModalWrapper onClose={() => setShowNewContact(false)}>
-            <div className="bg-white rounded shadow p-6 w-full max-w-md">
+            <div className="rounded shadow p-6 w-full max-w-md" style={{ background: 'var(--card)' }}>
               <h3 className="text-lg font-semibold mb-2">New contact</h3>
 
               <label className="block text-sm">Name</label>
@@ -562,7 +562,7 @@ export default function Page() {
         {/* Upload File Modal */}
         {showUploadFile && (
           <ModalWrapper onClose={() => setShowUploadFile(false)}>
-            <div className="bg-white rounded shadow p-6 w-full max-w-md">
+            <div className="rounded shadow p-6 w-full max-w-md" style={{ background: 'var(--card)' }}>
               <h3 className="text-lg font-semibold mb-2">Upload file</h3>
               <label className="block text-sm">File</label>
               <input
@@ -572,7 +572,7 @@ export default function Page() {
               />
 
               {uploadProgress > 0 && (
-                <div className="w-full bg-gray-100 rounded overflow-hidden mb-3">
+                <div className="w-full rounded overflow-hidden mb-3" style={{ background: 'var(--surface-10)' }}>
                   <div
                     style={{ width: `${uploadProgress}%` }}
                     className="h-2 bg-teal-500"
