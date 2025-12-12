@@ -381,7 +381,6 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
-                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--success-600)" }}
                 >
                   {stats.contacts}
@@ -423,7 +422,6 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
-                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--warning-600)" }}
                 >
                   {stats.deals}
@@ -449,7 +447,6 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
-                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--indigo-600)" }}
                 >
                   {stats.files}
@@ -491,7 +488,6 @@ export default function Page() {
                 </h3>
                 <p
                   className="text-2xl font-bold"
-                  style={{ color: "var(--fg)" }}
                   style={{ color: "var(--purple-600)" }}
                 >
                   {stats.tasks}
