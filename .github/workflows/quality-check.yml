@@ -121,13 +121,16 @@ jobs:
     steps:
       - name: Record deployment in New Relic
         continue-on-error: true
+        env:
+          NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
+          NEW_RELIC_APP_ID: ${{ secrets.NEW_RELIC_APP_ID }}
         run: |
-          if [ -z "${{ secrets.NEW_RELIC_API_KEY }}" ]; then
-            echo "⚠️ New Relic API key not configured, skipping deployment marker"
+          if [ -z "$NEW_RELIC_API_KEY" ] || [ -z "$NEW_RELIC_APP_ID" ]; then
+            echo "⚠️ New Relic API key or App ID not configured, skipping deployment marker"
             exit 0
           fi
-          curl -X POST "https://api.newrelic.com/v2/applications/${{ secrets.NEW_RELIC_APP_ID }}/deployments.json" \
-            -H "Api-Key:${{ secrets.NEW_RELIC_API_KEY }}" \
+          curl -X POST "https://api.newrelic.com/v2/applications/$NEW_RELIC_APP_ID/deployments.json" \
+            -H "Api-Key:$NEW_RELIC_API_KEY" \
             -H "Content-Type: application/json" \
             -d '{
               "deployment": {
