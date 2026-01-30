@@ -1,0 +1,81 @@
+#!/usr/bin/env sh
+# Template pre-push hook for EasyFlow-style projects
+
+CURRENT_BRANCH=$(git branch --show-current)
+
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  echo "❌ ERROR: Direct pushes to 'main' are BLOCKED. Create a PR instead."
+  exit 1
+fi
+
+if [ "$CURRENT_BRANCH" = "dev" ]; then
+  if [ "${FAST_PUSH:-false}" = "true" ]; then
+    echo "⚠️ FAST_PUSH=true → skipping full local CI gate for dev. Use intentionally."
+    exit 0
+  fi
+
+  echo "🧪 Running local CI gate for dev..."
+  if [ -x "scripts/local-ci-full.sh" ]; then
+    ./scripts/local-ci-full.sh || {
+      echo "❌ Local CI gate failed - fix before pushing"
+      exit 1
+    }
+  else
+    echo "⚠️ No local CI script found at scripts/local-ci-full.sh — skipping"
+  fi
+  exit 0
+fi
+
+echo "📋 Feature branch detected: $CURRENT_BRANCH — running stricter pre-push checks"
+
+# 1) Validate docs sync if script present
+if [ -x "scripts/validate-docs-sync.sh" ]; then
+  ./scripts/validate-docs-sync.sh || {
+    echo "❌ Documentation sync check failed - update README.md or docs/"
+    exit 1
+  }
+fi
+
+# 2) Run lint & tests/build where applicable
+if command -v npm >/dev/null 2>&1 && [ -f "package.json" ]; then
+  echo "  → Installing dependencies (npm ci)"
+  npm ci --silent || {
+    echo "❌ npm ci failed - fix before pushing"
+    exit 1
+  }
+
+  if npm run -s lint >/dev/null 2>&1; then
+    echo "  → Running lint"
+    npm run lint || {
+      echo "❌ Lint failed - fix before pushing"
+      exit 1
+    }
+  fi
+
+  if npm test --silent >/dev/null 2>&1; then
+    echo "  → Running tests (quick run)"
+    npm test --silent || {
+      echo "❌ Tests failed - fix before pushing"
+      exit 1
+    }
+  fi
+
+  echo "  → Building project (if applicable)"
+  if npm run -s build >/dev/null 2>&1; then
+    npm run build --silent || {
+      echo "❌ Build failed - fix before pushing"
+      exit 1
+    }
+  fi
+fi
+
+# 3) If a more comprehensive local CI gate exists, run it
+if [ -x "scripts/local-ci-full.sh" ]; then
+  echo "  → Running full local CI gate"
+  ./scripts/local-ci-full.sh || {
+    echo "❌ Local CI gate failed - fix before pushing"
+    exit 1
+  }
+fi
+
+echo "✅ Pre-push checks passed"
