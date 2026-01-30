@@ -74,3 +74,12 @@ next-env.d.ts
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc
+
+# Ignore local Easy-Flow clone and sensitive AI prompt templates
+/Easy-Flow-temp/
+**/AI_PROMPT.md
+**/AI_PROMPT*.md
+
+# Ignore cursor and editor workspace files that may contain sensitive prompts
+.cursor/
+.vscode/
